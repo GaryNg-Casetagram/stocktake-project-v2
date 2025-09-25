@@ -12,10 +12,10 @@ const ReportsPage: React.FC = () => {
     <AuthWrapper>
       <div className="space-y-6">
         {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Reports & Analytics</h1>
-        <p className="text-gray-600">Generate and view detailed reports for your inventory operations</p>
-      </div>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Reports & Analytics</h1>
+          <p className="text-gray-600">Generate and view detailed reports for your inventory operations</p>
+        </div>
 
       {/* Coming Soon Banner */}
       <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow-lg p-8 text-white">
