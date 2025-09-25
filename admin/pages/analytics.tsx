@@ -1,4 +1,5 @@
 import React from 'react';
+import AuthWrapper from '../components/AuthWrapper';
 import { ChartBarIcon, BuildingOfficeIcon, CubeIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline';
 
 const AnalyticsPage: React.FC = () => {
@@ -30,7 +31,8 @@ const AnalyticsPage: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <AuthWrapper>
+      <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
@@ -108,7 +110,7 @@ const AnalyticsPage: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+    </AuthWrapper>
   );
 };
 

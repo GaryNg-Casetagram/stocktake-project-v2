@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { useAuthStore } from '../stores/authStore';
 import { 
   ClipboardDocumentListIcon,
   PlayIcon,
@@ -15,10 +16,40 @@ import {
 
 const StockTakePage: React.FC = () => {
   const router = useRouter();
+  const { token, isAuthenticated, initializeAuth, isSessionValid, logout } = useAuthStore();
   const [showLabelModal, setShowLabelModal] = useState(false);
   const [labelType, setLabelType] = useState('item');
   const [labelQuantity, setLabelQuantity] = useState(1);
   const [labelFormat, setLabelFormat] = useState('standard');
+
+  // Check authentication and session validity on component mount
+  useEffect(() => {
+    if (!isAuthenticated || !token) {
+      router.push('/login');
+      return;
+    }
+    
+    // Check if session is still valid
+    if (!isSessionValid()) {
+      logout();
+      router.push('/login');
+      return;
+    }
+    
+    initializeAuth();
+  }, [router, isAuthenticated, token, isSessionValid, logout, initializeAuth]);
+
+  // Check session validity periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!isSessionValid()) {
+        logout();
+        router.push('/login');
+      }
+    }, 60000); // Check every minute
+
+    return () => clearInterval(interval);
+  }, [isSessionValid, logout, router]);
 
   const sessions = [
     {

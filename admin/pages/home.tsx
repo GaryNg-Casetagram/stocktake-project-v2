@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/router';
 import { useQuery } from 'react-query';
+import { useAuthStore } from '../stores/authStore';
 import { 
   HomeIcon,
   BuildingOfficeIcon, 
@@ -11,31 +13,90 @@ import {
 } from '@heroicons/react/24/outline';
 
 const HomeDashboard: React.FC = () => {
+  const router = useRouter();
+  const { token, isAuthenticated, initializeAuth, isSessionValid, logout } = useAuthStore();
+
+  // Check authentication and session validity on component mount
+  useEffect(() => {
+    if (!isAuthenticated || !token) {
+      router.push('/login');
+      return;
+    }
+    
+    // Check if session is still valid
+    if (!isSessionValid()) {
+      logout();
+      router.push('/login');
+      return;
+    }
+    
+    initializeAuth();
+  }, [router, isAuthenticated, token, isSessionValid, logout, initializeAuth]);
+
+  // Check session validity periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!isSessionValid()) {
+        logout();
+        router.push('/login');
+      }
+    }, 60000); // Check every minute
+
+    return () => clearInterval(interval);
+  }, [isSessionValid, logout, router]);
+
   // Fetch dashboard data
   const { data: locationsData } = useQuery(
     'locations',
     async () => {
-      const response = await fetch('http://localhost:3005/api/locations');
+      if (!token) throw new Error('No authentication token');
+      const response = await fetch('http://localhost:3005/api/locations', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
       if (!response.ok) throw new Error('Failed to fetch locations');
       return response.json();
+    },
+    {
+      enabled: !!token && isAuthenticated && isSessionValid(),
     }
   );
 
   const { data: itemsData } = useQuery(
     'items',
     async () => {
-      const response = await fetch('http://localhost:3005/api/items');
+      if (!token) throw new Error('No authentication token');
+      const response = await fetch('http://localhost:3005/api/items', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
       if (!response.ok) throw new Error('Failed to fetch items');
       return response.json();
+    },
+    {
+      enabled: !!token && isAuthenticated && isSessionValid(),
     }
   );
 
   const { data: sessionsData } = useQuery(
     'sessions',
     async () => {
-      const response = await fetch('http://localhost:3005/api/sessions');
+      if (!token) throw new Error('No authentication token');
+      const response = await fetch('http://localhost:3005/api/sessions', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
       if (!response.ok) throw new Error('Failed to fetch sessions');
       return response.json();
+    },
+    {
+      enabled: !!token && isAuthenticated && isSessionValid(),
     }
   );
 
