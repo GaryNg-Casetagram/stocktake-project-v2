@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useRouter } from 'next/router';
+import { useAuthStore } from '../stores/authStore';
 import toast from 'react-hot-toast';
 import { 
   PlusIcon, 
@@ -35,6 +36,7 @@ interface Location {
 
 const LocationsPage: React.FC = () => {
   const router = useRouter();
+  const { token, isAuthenticated, initializeAuth } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -46,17 +48,17 @@ const LocationsPage: React.FC = () => {
 
   // Check authentication on component mount
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
+    if (!isAuthenticated || !token) {
       router.push('/login');
+    } else {
+      initializeAuth();
     }
-  }, [router]);
+  }, [router, isAuthenticated, token, initializeAuth]);
 
   // Fetch locations with pagination
   const { data: locationsData, isLoading, error } = useQuery(
-    ['locations', searchTerm, typeFilter, statusFilter, currentPage],
+    ['locations', searchTerm, typeFilter, statusFilter, currentPage, token],
     async () => {
-      const token = localStorage.getItem('authToken');
       if (!token) {
         throw new Error('No authentication token found');
       }
@@ -76,7 +78,6 @@ const LocationsPage: React.FC = () => {
       });
       if (!response.ok) {
         if (response.status === 401) {
-          localStorage.removeItem('authToken');
           router.push('/login');
           throw new Error('Authentication expired');
         }
@@ -86,6 +87,7 @@ const LocationsPage: React.FC = () => {
     },
     {
       retry: false,
+      enabled: !!token && isAuthenticated,
       onError: (error: any) => {
         if (error.message === 'Authentication expired') {
           toast.error('Session expired. Please login again.');
@@ -99,7 +101,7 @@ const LocationsPage: React.FC = () => {
   // Delete location mutation
   const deleteLocationMutation = useMutation(
     async (id: string) => {
-      const token = localStorage.getItem('authToken');
+      if (!token) throw new Error('No authentication token');
       const response = await fetch(`http://localhost:3005/api/locations/${id}`, {
         method: 'DELETE',
         headers: {
@@ -397,6 +399,7 @@ const LocationModal: React.FC<{
   location?: Location | null;
   onClose: () => void;
 }> = ({ location, onClose }) => {
+  const { token } = useAuthStore();
   const [formData, setFormData] = useState({
     name: location?.name || '',
     type: location?.type || 'store',
@@ -414,7 +417,7 @@ const LocationModal: React.FC<{
 
   const createMutation = useMutation(
     async (data: typeof formData) => {
-      const token = localStorage.getItem('authToken');
+      if (!token) throw new Error('No authentication token');
       const response = await fetch('http://localhost:3005/api/locations', {
         method: 'POST',
         headers: {
@@ -440,7 +443,7 @@ const LocationModal: React.FC<{
 
   const updateMutation = useMutation(
     async (data: typeof formData) => {
-      const token = localStorage.getItem('authToken');
+      if (!token) throw new Error('No authentication token');
       const response = await fetch(`http://localhost:3005/api/locations/${location?.id}`, {
         method: 'PUT',
         headers: {

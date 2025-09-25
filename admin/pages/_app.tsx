@@ -47,7 +47,7 @@ function MyApp({ Component, pageProps }) {
             <Component {...pageProps} />
           </Dashboard>
         ) : (
-          <LoginPage />
+          <Component {...pageProps} />
         )}
         <Toaster
           position="top-right"
