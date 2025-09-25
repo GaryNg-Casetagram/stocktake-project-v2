@@ -12,7 +12,7 @@ import {
   BuildingOfficeIcon,
   PencilIcon,
   TrashIcon,
-  ArrowUpDownIcon
+  ArrowsUpDownIcon
 } from '@heroicons/react/24/outline';
 
 interface Item {
