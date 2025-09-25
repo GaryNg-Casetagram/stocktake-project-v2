@@ -1,0 +1,31 @@
+{
+  "name": "stocktake-app",
+  "version": "1.0.0",
+  "description": "Cross-platform stock take application with admin dashboard",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:mobile\" \"npm run dev:admin\" \"npm run dev:api\"",
+    "dev:mobile": "cd mobile && npm start",
+    "dev:admin": "cd admin && npm run dev",
+    "dev:api": "cd api && npm run dev",
+    "build": "npm run build:mobile && npm run build:admin && npm run build:api",
+    "build:mobile": "cd mobile && npm run build",
+    "build:admin": "cd admin && npm run build",
+    "build:api": "cd api && npm run build",
+    "test": "npm run test:mobile && npm run test:admin && npm run test:api",
+    "test:mobile": "cd mobile && npm test",
+    "test:admin": "cd admin && npm test",
+    "test:api": "cd api && npm test"
+  },
+  "keywords": ["stocktake", "inventory", "mobile", "react-native", "nextjs"],
+  "author": "StockTake Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "workspaces": [
+    "mobile",
+    "admin",
+    "api"
+  ]
+}

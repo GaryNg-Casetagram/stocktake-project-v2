@@ -1,0 +1,227 @@
+{
+  "name": "StockTake n8n Workflows",
+  "version": "1.0.0",
+  "description": "n8n workflow templates for StockTake integration with NetSuite and MPS",
+  "workflows": [
+    {
+      "name": "StockTake to NetSuite Sync",
+      "description": "Syncs approved stock take results to NetSuite inventory",
+      "nodes": [
+        {
+          "name": "Webhook",
+          "type": "n8n-nodes-base.webhook",
+          "parameters": {
+            "path": "stocktake-sync",
+            "httpMethod": "POST",
+            "responseMode": "responseNode"
+          }
+        },
+        {
+          "name": "Validate Data",
+          "type": "n8n-nodes-base.function",
+          "parameters": {
+            "functionCode": "// Validate incoming stock take data\nconst data = $input.first().json;\n\nif (!data.sessionId || !data.approvedCounts) {\n  throw new Error('Invalid data: missing sessionId or approvedCounts');\n}\n\nreturn { json: data };"
+          }
+        },
+        {
+          "name": "Transform to NetSuite Format",
+          "type": "n8n-nodes-base.function",
+          "parameters": {
+            "functionCode": "// Transform stock take data to NetSuite inventory adjustment format\nconst data = $input.first().json;\nconst adjustments = [];\n\nfor (const count of data.approvedCounts) {\n  adjustments.push({\n    item: count.itemSku,\n    location: data.locationId,\n    quantity: count.approvedCount,\n    adjustmentType: 'STOCK_TAKE',\n    reference: `ST-${data.sessionId}`,\n    memo: `Stock take ${data.sessionName} - Round ${count.round}`,\n    effectiveDate: new Date().toISOString().split('T')[0]\n  });\n}\n\nreturn { json: { adjustments } };"
+          }
+        },
+        {
+          "name": "NetSuite Inventory Adjustment",
+          "type": "n8n-nodes-base.httpRequest",
+          "parameters": {
+            "url": "https://{{$env.NETSUITE_ACCOUNT}}.app.netsuite.com/app/site/hosting/restlet.nl?script={{$env.NETSUITE_SCRIPT_ID}}&deploy={{$env.NETSUITE_DEPLOY_ID}}",
+            "authentication": "predefinedCredentialType",
+            "nodeCredentialType": "netsuiteApi",
+            "method": "POST",
+            "body": "={{JSON.stringify($json)}}",
+            "headers": {
+              "Content-Type": "application/json"
+            }
+          }
+        },
+        {
+          "name": "Update Sync Status",
+          "type": "n8n-nodes-base.httpRequest",
+          "parameters": {
+            "url": "{{$env.STOCKTAKE_API_URL}}/api/sync/status",
+            "method": "POST",
+            "body": "={\n  \"sessionId\": \"{{$('Webhook').item.json.sessionId}}\",\n  \"integrationType\": \"netsuite\",\n  \"status\": \"{{$('NetSuite Inventory Adjustment').item.json.success ? 'success' : 'failed'}}\",\n  \"payload\": {{JSON.stringify($('Transform to NetSuite Format').item.json)}},\n  \"errorMessage\": \"{{$('NetSuite Inventory Adjustment').item.json.error || ''}}\"\n}",
+            "headers": {
+              "Authorization": "Bearer {{$env.STOCKTAKE_API_TOKEN}}",
+              "Content-Type": "application/json"
+            }
+          }
+        },
+        {
+          "name": "Respond to Webhook",
+          "type": "n8n-nodes-base.respondToWebhook",
+          "parameters": {
+            "respondWith": "json",
+            "responseBody": "={\n  \"success\": {{$('NetSuite Inventory Adjustment').item.json.success}},\n  \"message\": \"Stock take data synced to NetSuite\",\n  \"processedItems\": {{$('Transform to NetSuite Format').item.json.adjustments.length}}\n}"
+          }
+        }
+      ],
+      "connections": {
+        "Webhook": ["Validate Data"],
+        "Validate Data": ["Transform to NetSuite Format"],
+        "Transform to NetSuite Format": ["NetSuite Inventory Adjustment"],
+        "NetSuite Inventory Adjustment": ["Update Sync Status"],
+        "Update Sync Status": ["Respond to Webhook"]
+      }
+    },
+    {
+      "name": "StockTake to MPS Sync",
+      "description": "Syncs approved stock take results to MPS system",
+      "nodes": [
+        {
+          "name": "Webhook",
+          "type": "n8n-nodes-base.webhook",
+          "parameters": {
+            "path": "stocktake-mps-sync",
+            "httpMethod": "POST",
+            "responseMode": "responseNode"
+          }
+        },
+        {
+          "name": "Validate Data",
+          "type": "n8n-nodes-base.function",
+          "parameters": {
+            "functionCode": "// Validate incoming stock take data for MPS\nconst data = $input.first().json;\n\nif (!data.sessionId || !data.approvedCounts) {\n  throw new Error('Invalid data: missing sessionId or approvedCounts');\n}\n\nreturn { json: data };"
+          }
+        },
+        {
+          "name": "Transform to MPS Format",
+          "type": "n8n-nodes-base.function",
+          "parameters": {
+            "functionCode": "// Transform stock take data to MPS inventory format\nconst data = $input.first().json;\nconst inventoryUpdates = [];\n\nfor (const count of data.approvedCounts) {\n  inventoryUpdates.push({\n    productCode: count.itemSku,\n    warehouseCode: data.warehouseCode,\n    quantityOnHand: count.approvedCount,\n    lastCountDate: new Date().toISOString(),\n    countReference: `ST-${data.sessionId}`,\n    notes: `Stock take ${data.sessionName}`\n  });\n}\n\nreturn { json: { inventoryUpdates } };"
+          }
+        },
+        {
+          "name": "MPS Inventory Update",
+          "type": "n8n-nodes-base.httpRequest",
+          "parameters": {
+            "url": "{{$env.MPS_API_URL}}/api/inventory/update",
+            "method": "PUT",
+            "body": "={{JSON.stringify($json)}}",
+            "headers": {
+              "Authorization": "Bearer {{$env.MPS_API_TOKEN}}",
+              "Content-Type": "application/json"
+            }
+          }
+        },
+        {
+          "name": "Update Sync Status",
+          "type": "n8n-nodes-base.httpRequest",
+          "parameters": {
+            "url": "{{$env.STOCKTAKE_API_URL}}/api/sync/status",
+            "method": "POST",
+            "body": "={\n  \"sessionId\": \"{{$('Webhook').item.json.sessionId}}\",\n  \"integrationType\": \"mps\",\n  \"status\": \"{{$('MPS Inventory Update').item.json.success ? 'success' : 'failed'}}\",\n  \"payload\": {{JSON.stringify($('Transform to MPS Format').item.json)}},\n  \"errorMessage\": \"{{$('MPS Inventory Update').item.json.error || ''}}\"\n}",
+            "headers": {
+              "Authorization": "Bearer {{$env.STOCKTAKE_API_TOKEN}}",
+              "Content-Type": "application/json"
+            }
+          }
+        },
+        {
+          "name": "Respond to Webhook",
+          "type": "n8n-nodes-base.respondToWebhook",
+          "parameters": {
+            "respondWith": "json",
+            "responseBody": "={\n  \"success\": {{$('MPS Inventory Update').item.json.success}},\n  \"message\": \"Stock take data synced to MPS\",\n  \"processedItems\": {{$('Transform to MPS Format').item.json.inventoryUpdates.length}}\n}"
+          }
+        }
+      ],
+      "connections": {
+        "Webhook": ["Validate Data"],
+        "Validate Data": ["Transform to MPS Format"],
+        "Transform to MPS Format": ["MPS Inventory Update"],
+        "MPS Inventory Update": ["Update Sync Status"],
+        "Update Sync Status": ["Respond to Webhook"]
+      }
+    },
+    {
+      "name": "StockTake Notification Workflow",
+      "description": "Sends notifications for stock take completion and approvals",
+      "nodes": [
+        {
+          "name": "Webhook",
+          "type": "n8n-nodes-base.webhook",
+          "parameters": {
+            "path": "stocktake-notifications",
+            "httpMethod": "POST",
+            "responseMode": "responseNode"
+          }
+        },
+        {
+          "name": "Determine Notification Type",
+          "type": "n8n-nodes-base.function",
+          "parameters": {
+            "functionCode": "// Determine notification type and recipients\nconst data = $input.first().json;\nconst notificationType = data.type; // 'session_completed', 'approval_required', 'sync_completed'\n\nlet recipients = [];\nlet subject = '';\nlet message = '';\n\nswitch (notificationType) {\n  case 'session_completed':\n    recipients = data.managers;\n    subject = `Stock Take Session Completed: ${data.sessionName}`;\n    message = `Stock take session \"${data.sessionName}\" has been completed and is ready for approval.`;\n    break;\n  case 'approval_required':\n    recipients = data.managers;\n    subject = `Approval Required: ${data.sessionName}`;\n    message = `Stock take session \"${data.sessionName}\" requires your approval.`;\n    break;\n  case 'sync_completed':\n    recipients = data.admins;\n    subject = `Sync Completed: ${data.sessionName}`;\n    message = `Stock take session \"${data.sessionName}\" has been successfully synced to external systems.`;\n    break;\n}\n\nreturn {\n  json: {\n    notificationType,\n    recipients,\n    subject,\n    message,\n    sessionData: data\n  }\n};"
+          }
+        },
+        {
+          "name": "Send Email Notifications",
+          "type": "n8n-nodes-base.emailSend",
+          "parameters": {
+            "toEmail": "={{$json.recipients.join(',')}}",
+            "subject": "={{$json.subject}}",
+            "message": "={{$json.message}}",
+            "options": {
+              "html": true
+            }
+          }
+        },
+        {
+          "name": "Send Slack Notification",
+          "type": "n8n-nodes-base.slack",
+          "parameters": {
+            "resource": "message",
+            "operation": "post",
+            "channel": "#stocktake-alerts",
+            "text": "={{$json.message}}",
+            "otherOptions": {
+              "username": "StockTake Bot"
+            }
+          }
+        },
+        {
+          "name": "Respond to Webhook",
+          "type": "n8n-nodes-base.respondToWebhook",
+          "parameters": {
+            "respondWith": "json",
+            "responseBody": "={\n  \"success\": true,\n  \"message\": \"Notifications sent successfully\",\n  \"recipients\": {{$('Determine Notification Type').item.json.recipients.length}}\n}"
+          }
+        }
+      ],
+      "connections": {
+        "Webhook": ["Determine Notification Type"],
+        "Determine Notification Type": ["Send Email Notifications", "Send Slack Notification"],
+        "Send Email Notifications": ["Respond to Webhook"],
+        "Send Slack Notification": ["Respond to Webhook"]
+      }
+    }
+  ],
+  "environmentVariables": {
+    "NETSUITE_ACCOUNT": "Your NetSuite account ID",
+    "NETSUITE_SCRIPT_ID": "Your NetSuite RESTlet script ID",
+    "NETSUITE_DEPLOY_ID": "Your NetSuite RESTlet deployment ID",
+    "MPS_API_URL": "Your MPS API endpoint",
+    "MPS_API_TOKEN": "Your MPS API token",
+    "STOCKTAKE_API_URL": "http://localhost:3001",
+    "STOCKTAKE_API_TOKEN": "Your StockTake API token"
+  },
+  "setupInstructions": [
+    "1. Import these workflows into your n8n instance",
+    "2. Configure the environment variables in n8n settings",
+    "3. Set up credentials for NetSuite API, MPS API, and email service",
+    "4. Test the webhook endpoints with sample data",
+    "5. Configure Slack integration if using notifications",
+    "6. Set up proper error handling and retry logic",
+    "7. Monitor workflow execution logs for any issues"
+  ]
+}
