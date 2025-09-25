@@ -36,7 +36,7 @@ interface Location {
 
 const LocationsPage: React.FC = () => {
   const router = useRouter();
-  const { token, isAuthenticated, initializeAuth } = useAuthStore();
+  const { token, isAuthenticated, initializeAuth, isSessionValid, logout } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -46,14 +46,34 @@ const LocationsPage: React.FC = () => {
   const [itemsPerPage] = useState(9);
   const queryClient = useQueryClient();
 
-  // Check authentication on component mount
+  // Check authentication and session validity on component mount
   useEffect(() => {
     if (!isAuthenticated || !token) {
       router.push('/login');
-    } else {
-      initializeAuth();
+      return;
     }
-  }, [router, isAuthenticated, token, initializeAuth]);
+    
+    // Check if session is still valid
+    if (!isSessionValid()) {
+      logout();
+      router.push('/login');
+      return;
+    }
+    
+    initializeAuth();
+  }, [router, isAuthenticated, token, isSessionValid, logout, initializeAuth]);
+
+  // Check session validity periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!isSessionValid()) {
+        logout();
+        router.push('/login');
+      }
+    }, 60000); // Check every minute
+
+    return () => clearInterval(interval);
+  }, [isSessionValid, logout, router]);
 
   // Fetch locations with pagination
   const { data: locationsData, isLoading, error } = useQuery(
@@ -87,7 +107,7 @@ const LocationsPage: React.FC = () => {
     },
     {
       retry: false,
-      enabled: !!token && isAuthenticated,
+      enabled: !!token && isAuthenticated && isSessionValid(),
       onError: (error: any) => {
         if (error.message === 'Authentication expired') {
           toast.error('Session expired. Please login again.');

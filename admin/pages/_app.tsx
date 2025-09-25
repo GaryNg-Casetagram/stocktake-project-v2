@@ -20,16 +20,27 @@ const queryClient = new QueryClient({
 });
 
 function MyApp({ Component, pageProps }) {
-  const { isAuthenticated, initializeAuth } = useAuthStore();
+  const { isAuthenticated, initializeAuth, isSessionValid } = useAuthStore();
   const [isInitialized, setIsInitialized] = React.useState(false);
 
   React.useEffect(() => {
-    const init = async () => {
-      await initializeAuth();
+    const init = () => {
+      initializeAuth();
       setIsInitialized(true);
     };
     init();
   }, [initializeAuth]);
+
+  // Check session validity periodically
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      if (isAuthenticated && !isSessionValid()) {
+        // Session expired, will be handled by individual components
+      }
+    }, 60000); // Check every minute
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated, isSessionValid]);
 
   if (!isInitialized) {
     return (

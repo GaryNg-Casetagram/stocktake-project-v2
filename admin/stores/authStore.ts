@@ -50,11 +50,13 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  loginTime: number | null;
+  sessionExpiry: number | null;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  logout: () => Promise<void>;
-  refreshToken: () => Promise<boolean>;
-  initializeAuth: () => Promise<void>;
+  logout: () => void;
+  initializeAuth: () => void;
   clearError: () => void;
+  isSessionValid: () => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -66,6 +68,8 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isLoading: false,
       error: null,
+      loginTime: null,
+      sessionExpiry: null,
 
       // Actions
       login: async (email: string, password: string) => {
@@ -86,6 +90,8 @@ export const useAuthStore = create<AuthState>()(
           }
 
           const { token, user } = data;
+          const loginTime = Date.now();
+          const sessionExpiry = loginTime + (24 * 60 * 60 * 1000); // 24 hours
           
           set({
             user,
@@ -93,6 +99,8 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: true,
             isLoading: false,
             error: null,
+            loginTime,
+            sessionExpiry,
           });
           
           return { success: true };
@@ -107,73 +115,31 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      logout: async () => {
-        try {
-          const { token } = get();
-          if (token) {
-            await fetch('http://localhost:3005/api/auth/logout', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-              },
-            });
-          }
-        } catch (error) {
-          console.warn('Logout API call failed:', error);
-        } finally {
-          set({
-            user: null,
-            token: null,
-            isAuthenticated: false,
-            error: null,
-          });
-        }
+      logout: () => {
+        set({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          error: null,
+          loginTime: null,
+          sessionExpiry: null,
+        });
       },
 
-      refreshToken: async () => {
-        const { token } = get();
-        if (!token) return false;
-
-        try {
-          const response = await fetch('http://localhost:3005/api/auth/refresh', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          });
-
-          if (!response.ok) {
-            throw new Error('Token refresh failed');
-          }
-
-          const data = await response.json();
-          const { token: newToken } = data;
-          
-          set({ token: newToken });
-          return true;
-        } catch (error) {
-          console.warn('Token refresh failed:', error);
-          get().logout();
-          return false;
-        }
+      isSessionValid: () => {
+        const { sessionExpiry } = get();
+        if (!sessionExpiry) return false;
+        return Date.now() < sessionExpiry;
       },
 
-      initializeAuth: async () => {
-        const { token } = get();
-        if (!token) return;
-
-        try {
-          // Verify token is still valid
-          const isValid = await get().refreshToken();
-          if (isValid) {
-            set({ isAuthenticated: true });
-          }
-        } catch (error) {
-          console.warn('Auth initialization failed:', error);
+      initializeAuth: () => {
+        const { token, isSessionValid } = get();
+        if (!token || !isSessionValid()) {
           get().logout();
+          return;
         }
+        // Session is valid, ensure authenticated state
+        set({ isAuthenticated: true });
       },
 
       clearError: () => set({ error: null }),
@@ -185,6 +151,8 @@ export const useAuthStore = create<AuthState>()(
         user: state.user,
         token: state.token,
         isAuthenticated: state.isAuthenticated,
+        loginTime: state.loginTime,
+        sessionExpiry: state.sessionExpiry,
       }),
     }
   )
