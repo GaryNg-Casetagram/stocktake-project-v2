@@ -208,6 +208,52 @@ const ItemsPage: React.FC = () => {
     );
   };
 
+  // Don't render if not authenticated
+  if (!isAuthenticated || !token) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  // Show error state if there's an error
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Items</h1>
+            <p className="text-gray-600">Manage your inventory items</p>
+          </div>
+        </div>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <div className="flex items-center">
+            <div className="text-red-400 mr-3">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-red-800">Error loading items</h3>
+              <p className="text-sm text-red-700 mt-1">
+                {error.message === 'Authentication expired' 
+                  ? 'Your session has expired. Please login again.' 
+                  : 'Please try refreshing the page or contact support if the problem persists.'}
+              </p>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
+              >
+                Refresh page
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -274,8 +320,9 @@ const ItemsPage: React.FC = () => {
       {/* Items Table */}
       <div className="bg-white shadow rounded-lg overflow-hidden">
         {isLoading ? (
-          <div className="flex justify-center items-center h-64">
+          <div className="flex flex-col justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <p className="mt-4 text-sm text-gray-500">Loading items...</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
