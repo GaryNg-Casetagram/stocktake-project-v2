@@ -1,11 +1,52 @@
-import React from 'react';
-import AuthWrapper from '../components/AuthWrapper';
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/router';
+import { useAuthStore } from '../stores/authStore';
 import { CogIcon, UserIcon, BellIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 
 const SettingsPage: React.FC = () => {
+  const router = useRouter();
+  const { token, isAuthenticated, initializeAuth, isSessionValid, logout } = useAuthStore();
+
+  // Check authentication and session validity on component mount
+  useEffect(() => {
+    if (!isAuthenticated || !token) {
+      router.push('/login');
+      return;
+    }
+    
+    // Check if session is still valid
+    if (!isSessionValid()) {
+      logout();
+      router.push('/login');
+      return;
+    }
+    
+    initializeAuth();
+  }, [router, isAuthenticated, token, isSessionValid, logout, initializeAuth]);
+
+  // Check session validity periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!isSessionValid()) {
+        logout();
+        router.push('/login');
+      }
+    }, 60000); // Check every minute
+
+    return () => clearInterval(interval);
+  }, [isSessionValid, logout, router]);
+
+  // Don't render if not authenticated
+  if (!isAuthenticated || !token) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
-    <AuthWrapper>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Header */}
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
@@ -186,7 +227,7 @@ const SettingsPage: React.FC = () => {
           </div>
         </div>
       </div>
-    </AuthWrapper>
+    </div>
   );
 };
 
