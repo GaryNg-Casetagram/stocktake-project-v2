@@ -11,7 +11,7 @@ const ReportsPage: React.FC = () => {
   return (
     <AuthWrapper>
       <div className="space-y-6">
-      {/* Header */}
+        {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Reports & Analytics</h1>
         <p className="text-gray-600">Generate and view detailed reports for your inventory operations</p>
