@@ -1,14 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useRouter } from 'next/router';
 import { 
   ClipboardDocumentListIcon,
   PlayIcon,
   PauseIcon,
   StopIcon,
   PlusIcon,
-  EyeIcon
+  EyeIcon,
+  ArrowLeftIcon,
+  PrinterIcon,
+  TagIcon,
+  DocumentDuplicateIcon
 } from '@heroicons/react/24/outline';
 
 const StockTakePage: React.FC = () => {
+  const router = useRouter();
+  const [showLabelModal, setShowLabelModal] = useState(false);
+  const [labelType, setLabelType] = useState('item');
+  const [labelQuantity, setLabelQuantity] = useState(1);
+  const [labelFormat, setLabelFormat] = useState('standard');
+
   const sessions = [
     {
       id: 'session-demo-1',
@@ -52,18 +63,51 @@ const StockTakePage: React.FC = () => {
     }
   };
 
+  const handleBack = () => {
+    router.push('/home');
+  };
+
+  const handleGenerateLabels = () => {
+    setShowLabelModal(true);
+  };
+
+  const handlePrintLabels = () => {
+    // Simulate label printing
+    alert(`Printing ${labelQuantity} ${labelType} labels in ${labelFormat} format`);
+    setShowLabelModal(false);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">StockTake Sessions</h1>
-          <p className="text-gray-600">Manage your inventory counting sessions</p>
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={handleBack}
+            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeftIcon className="w-5 h-5" />
+            <span>Back to Dashboard</span>
+          </button>
+          <div className="border-l border-gray-300 h-8"></div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">StockTake Sessions</h1>
+            <p className="text-gray-600">Manage your inventory counting sessions</p>
+          </div>
         </div>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center space-x-2">
-          <PlusIcon className="w-5 h-5" />
-          <span>New Session</span>
-        </button>
+        <div className="flex space-x-3">
+          <button 
+            onClick={handleGenerateLabels}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md flex items-center space-x-2"
+          >
+            <PrinterIcon className="w-5 h-5" />
+            <span>Generate Labels</span>
+          </button>
+          <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center space-x-2">
+            <PlusIcon className="w-5 h-5" />
+            <span>New Session</span>
+          </button>
+        </div>
       </div>
 
       {/* Quick Stats */}
@@ -263,6 +307,94 @@ const StockTakePage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Label Generation Modal */}
+      {showLabelModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Generate Labels
+                </h3>
+                <button
+                  onClick={() => setShowLabelModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Label Type</label>
+                  <select
+                    value={labelType}
+                    onChange={(e) => setLabelType(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="item">Item Labels</option>
+                    <option value="location">Location Labels</option>
+                    <option value="session">Session Labels</option>
+                    <option value="rfid">RFID Labels</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="1000"
+                    value={labelQuantity}
+                    onChange={(e) => setLabelQuantity(parseInt(e.target.value) || 1)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Format</label>
+                  <select
+                    value={labelFormat}
+                    onChange={(e) => setLabelFormat(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="standard">Standard (2" x 1")</option>
+                    <option value="small">Small (1" x 0.5")</option>
+                    <option value="large">Large (4" x 2")</option>
+                    <option value="custom">Custom Size</option>
+                  </select>
+                </div>
+
+                <div className="bg-gray-50 p-3 rounded-md">
+                  <div className="flex items-center space-x-2 text-sm text-gray-600">
+                    <TagIcon className="w-4 h-4" />
+                    <span>Preview: {labelQuantity} {labelType} labels ({labelFormat})</span>
+                  </div>
+                </div>
+
+                <div className="flex space-x-3 pt-4">
+                  <button
+                    onClick={() => setShowLabelModal(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handlePrintLabels}
+                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center justify-center space-x-2"
+                  >
+                    <PrinterIcon className="w-4 h-4" />
+                    <span>Print Labels</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
