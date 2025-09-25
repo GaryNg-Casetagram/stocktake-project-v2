@@ -200,11 +200,11 @@ const ItemsPage: React.FC = () => {
   };
 
   const getSortIcon = (field: string) => {
-    if (sortBy !== field) return <ArrowUpDownIcon className="w-4 h-4" />;
+    if (sortBy !== field) return <ArrowsUpDownIcon className="w-4 h-4" />;
     return sortOrder === 'asc' ? (
-      <ArrowUpDownIcon className="w-4 h-4 rotate-180" />
+      <ArrowsUpDownIcon className="w-4 h-4 rotate-180" />
     ) : (
-      <ArrowUpDownIcon className="w-4 h-4" />
+      <ArrowsUpDownIcon className="w-4 h-4" />
     );
   };
 
