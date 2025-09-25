@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StockTake Project v2 - Inventory Management System</title>
+    <meta name="description" content="A comprehensive inventory management system with mobile scanning, admin dashboard, and user management capabilities.">
+    <meta name="keywords" content="inventory management, stocktake, mobile app, admin dashboard, RFID, barcode scanning">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="StockTake Project v2 - Inventory Management System">
+    <meta property="og:description" content="A comprehensive inventory management system with mobile scanning, admin dashboard, and user management capabilities.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://garyng-casetagram.github.io/stocktake-project-v2/">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
+    
+    <!-- CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="font-inter bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-2xl font-bold text-gray-900">📦 StockTake v2</h1>
+                    </div>
+                    <div class="hidden md:ml-6 md:flex md:space-x-8">
+                        <a href="#features" class="text-gray-500 hover:text-gray-900 px-3 py-2 text-sm font-medium">Features</a>
+                        <a href="#architecture" class="text-gray-500 hover:text-gray-900 px-3 py-2 text-sm font-medium">Architecture</a>
+                        <a href="#demo" class="text-gray-500 hover:text-gray-900 px-3 py-2 text-sm font-medium">Demo</a>
+                        <a href="#documentation" class="text-gray-500 hover:text-gray-900 px-3 py-2 text-sm font-medium">Documentation</a>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <a href="https://github.com/GaryNg-Casetagram/stocktake-project-v2" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+                        View on GitHub
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+            <div class="text-center">
+                <h1 class="text-4xl md:text-6xl font-bold mb-6">
+                    StockTake Project v2
+                </h1>
+                <p class="text-xl md:text-2xl mb-8 text-blue-100">
+                    Comprehensive Inventory Management System
+                </p>
+                <p class="text-lg mb-12 text-blue-200 max-w-3xl mx-auto">
+                    A modern, full-stack inventory management solution featuring mobile scanning capabilities, 
+                    admin dashboard, user management, and real-time analytics.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="#demo" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                        View Demo
+                    </a>
+                    <a href="https://github.com/GaryNg-Casetagram/stocktake-project-v2" target="_blank" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors">
+                        GitHub Repository
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                    Key Features
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Built with modern technologies and designed for scalability, 
+                    StockTake v2 provides everything you need for efficient inventory management.
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Mobile App -->
+                <div class="bg-gray-50 p-8 rounded-xl">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
+                        <span class="text-2xl">📱</span>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">Mobile Scanning App</h3>
+                    <p class="text-gray-600 mb-4">
+                        React Native mobile application with barcode and RFID scanning capabilities for efficient inventory tracking.
+                    </p>
+                    <ul class="text-sm text-gray-500 space-y-2">
+                        <li>• Barcode & RFID scanning</li>
+                        <li>• Offline data synchronization</li>
+                        <li>• Real-time inventory updates</li>
+                        <li>• Cross-platform compatibility</li>
+                    </ul>
+                </div>
+
+                <!-- Admin Dashboard -->
+                <div class="bg-gray-50 p-8 rounded-xl">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-6">
+                        <span class="text-2xl">🖥️</span>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">Admin Dashboard</h3>
+                    <p class="text-gray-600 mb-4">
+                        Comprehensive web-based admin panel built with Next.js and React for managing all aspects of your inventory.
+                    </p>
+                    <ul class="text-sm text-gray-500 space-y-2">
+                        <li>• Real-time analytics & reporting</li>
+                        <li>• User management & permissions</li>
+                        <li>• Location & item management</li>
+                        <li>• Label generation & printing</li>
+                    </ul>
+                </div>
+
+                <!-- API Backend -->
+                <div class="bg-gray-50 p-8 rounded-xl">
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-6">
+                        <span class="text-2xl">⚙️</span>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">RESTful API</h3>
+                    <p class="text-gray-600 mb-4">
+                        Robust Node.js backend with Express.js providing secure API endpoints for all system operations.
+                    </p>
+                    <ul class="text-sm text-gray-500 space-y-2">
+                        <li>• JWT authentication & authorization</li>
+                        <li>• Role-based access control</li>
+                        <li>• Comprehensive CRUD operations</li>
+                        <li>• Data validation & error handling</li>
+                    </ul>
+                </div>
+
+                <!-- User Management -->
+                <div class="bg-gray-50 p-8 rounded-xl">
+                    <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-6">
+                        <span class="text-2xl">👥</span>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">User Management</h3>
+                    <p class="text-gray-600 mb-4">
+                        Advanced user management system with role-based permissions and location assignments.
+                    </p>
+                    <ul class="text-sm text-gray-500 space-y-2">
+                        <li>• Super Admin, Manager, Staff roles</li>
+                        <li>• Store & warehouse assignments</li>
+                        <li>• User activity tracking</li>
+                        <li>• Secure authentication system</li>
+                    </ul>
+                </div>
+
+                <!-- Analytics -->
+                <div class="bg-gray-50 p-8 rounded-xl">
+                    <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-6">
+                        <span class="text-2xl">📊</span>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">Analytics & Reporting</h3>
+                    <p class="text-gray-600 mb-4">
+                        Comprehensive analytics dashboard with real-time insights and customizable reports.
+                    </p>
+                    <ul class="text-sm text-gray-500 space-y-2">
+                        <li>• Real-time inventory metrics</li>
+                        <li>• Location-based analytics</li>
+                        <li>• User activity reports</li>
+                        <li>• Export capabilities</li>
+                    </ul>
+                </div>
+
+                <!-- Label Generation -->
+                <div class="bg-gray-50 p-8 rounded-xl">
+                    <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-6">
+                        <span class="text-2xl">🏷️</span>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">Label Generation</h3>
+                    <p class="text-gray-600 mb-4">
+                        Advanced label generation system supporting multiple formats and bulk operations.
+                    </p>
+                    <ul class="text-sm text-gray-500 space-y-2">
+                        <li>• QR code & barcode generation</li>
+                        <li>• Bulk label printing</li>
+                        <li>• Multiple format support</li>
+                        <li>• Custom label templates</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Architecture Section -->
+    <section id="architecture" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                    System Architecture
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Built with modern technologies and best practices for scalability, security, and maintainability.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div>
+                    <h3 class="text-2xl font-semibold text-gray-900 mb-6">Technology Stack</h3>
+                    
+                    <div class="space-y-6">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <span class="text-blue-600 font-semibold text-sm">M</span>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900">Mobile App</h4>
+                                <p class="text-gray-600">React Native, Expo, JavaScript</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-4">
+                            <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <span class="text-green-600 font-semibold text-sm">A</span>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900">Admin Dashboard</h4>
+                                <p class="text-gray-600">Next.js, React, TypeScript, Tailwind CSS</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-4">
+                            <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <span class="text-purple-600 font-semibold text-sm">B</span>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900">Backend API</h4>
+                                <p class="text-gray-600">Node.js, Express.js, JWT, bcrypt</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-4">
+                            <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <span class="text-yellow-600 font-semibold text-sm">D</span>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900">Database</h4>
+                                <p class="text-gray-600">In-memory storage (demo), SQLite ready</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-8 rounded-xl shadow-lg">
+                    <h3 class="text-2xl font-semibold text-gray-900 mb-6">System Components</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
+                            <span class="text-gray-700">Mobile Scanning Interface</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                            <span class="text-gray-700">Web Admin Dashboard</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-3 h-3 bg-purple-500 rounded-full"></div>
+                            <span class="text-gray-700">RESTful API Server</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                            <span class="text-gray-700">User Management System</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                            <span class="text-gray-700">Analytics & Reporting</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-3 h-3 bg-indigo-500 rounded-full"></div>
+                            <span class="text-gray-700">Label Generation System</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section id="demo" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                    Live Demo
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Experience the StockTake v2 system with our live demo environment.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-gray-50 p-8 rounded-xl">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">Admin Dashboard</h3>
+                    <p class="text-gray-600 mb-6">
+                        Access the full-featured admin dashboard with user management, analytics, and inventory control.
+                    </p>
+                    <div class="space-y-3">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-sm text-gray-500">URL:</span>
+                            <code class="bg-gray-200 px-2 py-1 rounded text-sm">http://localhost:3006</code>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="text-sm text-gray-500">Admin:</span>
+                            <code class="bg-gray-200 px-2 py-1 rounded text-sm">admin@stocktake.com</code>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="text-sm text-gray-500">Password:</span>
+                            <code class="bg-gray-200 px-2 py-1 rounded text-sm">password123</code>
+                        </div>
+                    </div>
+                    <div class="mt-6">
+                        <a href="http://localhost:3006" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold inline-block">
+                            Open Admin Dashboard
+                        </a>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 p-8 rounded-xl">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">API Endpoints</h3>
+                    <p class="text-gray-600 mb-6">
+                        Explore the RESTful API with comprehensive endpoints for all system operations.
+                    </p>
+                    <div class="space-y-3">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-sm text-gray-500">Base URL:</span>
+                            <code class="bg-gray-200 px-2 py-1 rounded text-sm">http://localhost:3005</code>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="text-sm text-gray-500">Health Check:</span>
+                            <code class="bg-gray-200 px-2 py-1 rounded text-sm">/health</code>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="text-sm text-gray-500">API Docs:</span>
+                            <code class="bg-gray-200 px-2 py-1 rounded text-sm">/api/docs</code>
+                        </div>
+                    </div>
+                    <div class="mt-6">
+                        <a href="http://localhost:3005/health" target="_blank" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold inline-block">
+                            Check API Health
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Documentation Section -->
+    <section id="documentation" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                    Documentation
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Comprehensive documentation to help you get started and understand the system architecture.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">API Documentation</h3>
+                    <p class="text-gray-600 mb-4">Complete API reference with endpoints, authentication, and examples.</p>
+                    <a href="api-documentation.md" class="text-blue-600 hover:text-blue-800 font-medium">View API Docs →</a>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">Environment Setup</h3>
+                    <p class="text-gray-600 mb-4">Step-by-step guide to set up your development environment.</p>
+                    <a href="environment-config.md" class="text-blue-600 hover:text-blue-800 font-medium">View Setup Guide →</a>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">Pilot Checklist</h3>
+                    <p class="text-gray-600 mb-4">Comprehensive checklist for pilot deployment and testing.</p>
+                    <a href="pilot-checklist.md" class="text-blue-600 hover:text-blue-800 font-medium">View Checklist →</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">StockTake v2</h3>
+                    <p class="text-gray-400 mb-4">
+                        A comprehensive inventory management system built with modern technologies and best practices.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="https://github.com/GaryNg-Casetagram/stocktake-project-v2" target="_blank" class="text-gray-400 hover:text-white">
+                            <span class="sr-only">GitHub</span>
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#features" class="text-gray-400 hover:text-white">Features</a></li>
+                        <li><a href="#architecture" class="text-gray-400 hover:text-white">Architecture</a></li>
+                        <li><a href="#demo" class="text-gray-400 hover:text-white">Demo</a></li>
+                        <li><a href="#documentation" class="text-gray-400 hover:text-white">Documentation</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Technologies</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li>React Native</li>
+                        <li>Next.js</li>
+                        <li>Node.js</li>
+                        <li>TypeScript</li>
+                        <li>Tailwind CSS</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2024 StockTake Project v2. Built with ❤️ for efficient inventory management.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="js/main.js"></script>
+</body>
+</html>
