@@ -7,6 +7,33 @@ const AnalyticsPage: React.FC = () => {
   const router = useRouter();
   const { token, isAuthenticated, initializeAuth, isSessionValid, logout } = useAuthStore();
 
+  const stats = [
+    {
+      name: 'Total Locations',
+      value: '3',
+      icon: BuildingOfficeIcon,
+      color: 'bg-blue-500',
+    },
+    {
+      name: 'Total Items',
+      value: '2',
+      icon: CubeIcon,
+      color: 'bg-green-500',
+    },
+    {
+      name: 'Total Value',
+      value: '$345.98',
+      icon: CurrencyDollarIcon,
+      color: 'bg-yellow-500',
+    },
+    {
+      name: 'Active Sessions',
+      value: '1',
+      icon: ChartBarIcon,
+      color: 'bg-purple-500',
+    },
+  ];
+
   // Check authentication and session validity on component mount
   useEffect(() => {
     if (!isAuthenticated || !token) {
@@ -44,32 +71,6 @@ const AnalyticsPage: React.FC = () => {
       </div>
     );
   }
-  const stats = [
-    {
-      name: 'Total Locations',
-      value: '3',
-      icon: BuildingOfficeIcon,
-      color: 'bg-blue-500',
-    },
-    {
-      name: 'Total Items',
-      value: '2',
-      icon: CubeIcon,
-      color: 'bg-green-500',
-    },
-    {
-      name: 'Total Value',
-      value: '$345.98',
-      icon: CurrencyDollarIcon,
-      color: 'bg-yellow-500',
-    },
-    {
-      name: 'Active Sessions',
-      value: '1',
-      icon: ChartBarIcon,
-      color: 'bg-purple-500',
-    },
-  ];
 
   return (
     <div className="space-y-6">
