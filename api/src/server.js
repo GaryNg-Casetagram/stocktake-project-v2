@@ -16,10 +16,12 @@ const users = [
     password: '$2a$10$hb8HtG1DTYeuj0ZxIww8AOKn53eHj0DRJkpnpVedC.b/NTYhc76zy', // password123
     firstName: 'System',
     lastName: 'Admin',
-    role: 'tech_admin',
+    role: 'superadmin',
     storeId: null,
     warehouseId: null,
-    isActive: true
+    isActive: true,
+    createdAt: '2024-01-01T00:00:00Z',
+    lastLogin: '2024-01-15T10:30:00Z'
   },
   {
     id: '2',
@@ -30,7 +32,61 @@ const users = [
     role: 'retail_manager',
     storeId: 'store-1',
     warehouseId: null,
-    isActive: true
+    isActive: true,
+    createdAt: '2024-01-02T00:00:00Z',
+    lastLogin: '2024-01-14T15:20:00Z'
+  },
+  {
+    id: '3',
+    email: 'warehouse.manager@stocktake.com',
+    password: '$2a$10$hb8HtG1DTYeuj0ZxIww8AOKn53eHj0DRJkpnpVedC.b/NTYhc76zy', // password123
+    firstName: 'Sarah',
+    lastName: 'Johnson',
+    role: 'warehouse_manager',
+    storeId: null,
+    warehouseId: 'warehouse-1',
+    isActive: true,
+    createdAt: '2024-01-03T00:00:00Z',
+    lastLogin: '2024-01-13T09:15:00Z'
+  },
+  {
+    id: '4',
+    email: 'staff.eastside@stocktake.com',
+    password: '$2a$10$hb8HtG1DTYeuj0ZxIww8AOKn53eHj0DRJkpnpVedC.b/NTYhc76zy', // password123
+    firstName: 'Mike',
+    lastName: 'Davis',
+    role: 'staff',
+    storeId: 'store-2',
+    warehouseId: null,
+    isActive: true,
+    createdAt: '2024-01-04T00:00:00Z',
+    lastLogin: '2024-01-12T14:45:00Z'
+  },
+  {
+    id: '5',
+    email: 'staff.westside@stocktake.com',
+    password: '$2a$10$hb8HtG1DTYeuj0ZxIww8AOKn53eHj0DRJkpnpVedC.b/NTYhc76zy', // password123
+    firstName: 'Lisa',
+    lastName: 'Wilson',
+    role: 'staff',
+    storeId: 'store-1',
+    warehouseId: null,
+    isActive: true,
+    createdAt: '2024-01-05T00:00:00Z',
+    lastLogin: '2024-01-11T11:30:00Z'
+  },
+  {
+    id: '6',
+    email: 'inactive.user@stocktake.com',
+    password: '$2a$10$hb8HtG1DTYeuj0ZxIww8AOKn53eHj0DRJkpnpVedC.b/NTYhc76zy', // password123
+    firstName: 'Tom',
+    lastName: 'Brown',
+    role: 'staff',
+    storeId: 'store-3',
+    warehouseId: null,
+    isActive: false,
+    createdAt: '2024-01-06T00:00:00Z',
+    lastLogin: '2024-01-10T16:20:00Z'
   }
 ];
 
@@ -893,6 +949,328 @@ app.post('/api/labels/bulk', authenticateToken, (req, res) => {
     res.setHeader('Content-Disposition', 'attachment; filename="bulk-labels-data.json"');
     res.json(zipData);
   }
+});
+
+// ==================== USER MANAGEMENT API ====================
+
+// Get all users endpoint (superadmin only)
+app.get('/api/users', authenticateToken, (req, res) => {
+  const { role } = req.user;
+  
+  // Only superadmin can access all users
+  if (role !== 'superadmin') {
+    return res.status(403).json({ error: 'Access denied. Superadmin role required.' });
+  }
+  
+  const { 
+    page = 1, 
+    limit = 10, 
+    search = '', 
+    role: roleFilter = '', 
+    status = '',
+    sortBy = 'createdAt',
+    sortOrder = 'desc'
+  } = req.query;
+  
+  let filteredUsers = [...users];
+  
+  // Apply search filter
+  if (search) {
+    const searchLower = search.toLowerCase();
+    filteredUsers = filteredUsers.filter(user => 
+      user.firstName.toLowerCase().includes(searchLower) ||
+      user.lastName.toLowerCase().includes(searchLower) ||
+      user.email.toLowerCase().includes(searchLower)
+    );
+  }
+  
+  // Apply role filter
+  if (roleFilter) {
+    filteredUsers = filteredUsers.filter(user => user.role === roleFilter);
+  }
+  
+  // Apply status filter
+  if (status !== '') {
+    const isActive = status === 'active';
+    filteredUsers = filteredUsers.filter(user => user.isActive === isActive);
+  }
+  
+  // Apply sorting
+  filteredUsers.sort((a, b) => {
+    let aValue = a[sortBy];
+    let bValue = b[sortBy];
+    
+    if (sortBy === 'createdAt' || sortBy === 'lastLogin') {
+      aValue = new Date(aValue);
+      bValue = new Date(bValue);
+    }
+    
+    if (sortOrder === 'asc') {
+      return aValue > bValue ? 1 : -1;
+    } else {
+      return aValue < bValue ? 1 : -1;
+    }
+  });
+  
+  // Apply pagination
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + parseInt(limit);
+  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+  
+  // Remove password from response
+  const safeUsers = paginatedUsers.map(user => {
+    const { password, ...safeUser } = user;
+    return safeUser;
+  });
+  
+  res.json({
+    data: safeUsers,
+    pagination: {
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(filteredUsers.length / limit),
+      totalItems: filteredUsers.length,
+      itemsPerPage: parseInt(limit)
+    },
+    filters: {
+      search,
+      role: roleFilter,
+      status,
+      sortBy,
+      sortOrder
+    }
+  });
+});
+
+// Get user roles endpoint (must be before /api/users/:id)
+app.get('/api/users/roles', authenticateToken, (req, res) => {
+  const { role } = req.user;
+  
+  // Only superadmin can access roles
+  if (role !== 'superadmin') {
+    return res.status(403).json({ error: 'Access denied. Superadmin role required.' });
+  }
+  
+  const roles = [
+    {
+      value: 'superadmin',
+      label: 'Super Admin',
+      description: 'Full system access and user management',
+      permissions: ['all']
+    },
+    {
+      value: 'retail_manager',
+      label: 'Retail Manager',
+      description: 'Manage retail operations and staff',
+      permissions: ['items', 'locations', 'sessions', 'reports']
+    },
+    {
+      value: 'warehouse_manager',
+      label: 'Warehouse Manager',
+      description: 'Manage warehouse operations and inventory',
+      permissions: ['items', 'warehouse', 'inventory', 'reports']
+    },
+    {
+      value: 'staff',
+      label: 'Staff',
+      description: 'Basic operations and data entry',
+      permissions: ['items', 'sessions']
+    }
+  ];
+  
+  res.json({
+    data: roles
+  });
+});
+
+// Get single user endpoint
+app.get('/api/users/:id', authenticateToken, (req, res) => {
+  const { id } = req.params;
+  const { role, id: userId } = req.user;
+  
+  // Only superadmin can access any user, others can only access their own profile
+  if (role !== 'superadmin' && userId !== id) {
+    return res.status(403).json({ error: 'Access denied' });
+  }
+  
+  const user = users.find(u => u.id === id);
+  
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+  
+  // Remove password from response
+  const { password, ...safeUser } = user;
+  
+  res.json({
+    data: safeUser
+  });
+});
+
+// Create user endpoint (superadmin only)
+app.post('/api/users', authenticateToken, (req, res) => {
+  const { role } = req.user;
+  
+  // Only superadmin can create users
+  if (role !== 'superadmin') {
+    return res.status(403).json({ error: 'Access denied. Superadmin role required.' });
+  }
+  
+  const { 
+    email, 
+    password, 
+    firstName, 
+    lastName, 
+    role: userRole, 
+    storeId, 
+    warehouseId 
+  } = req.body;
+  
+  // Validation
+  if (!email || !password || !firstName || !lastName || !userRole) {
+    return res.status(400).json({ error: 'Email, password, first name, last name, and role are required' });
+  }
+  
+  // Check if email already exists
+  const existingUser = users.find(u => u.email === email);
+  if (existingUser) {
+    return res.status(400).json({ error: 'User with this email already exists' });
+  }
+  
+  // Validate role
+  const validRoles = ['superadmin', 'retail_manager', 'warehouse_manager', 'staff'];
+  if (!validRoles.includes(userRole)) {
+    return res.status(400).json({ error: 'Invalid role. Valid roles: superadmin, retail_manager, warehouse_manager, staff' });
+  }
+  
+  // Hash password
+  const hashedPassword = bcrypt.hashSync(password, 10);
+  
+  // Create new user
+  const newUser = {
+    id: (users.length + 1).toString(),
+    email,
+    password: hashedPassword,
+    firstName,
+    lastName,
+    role: userRole,
+    storeId: storeId || null,
+    warehouseId: warehouseId || null,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    lastLogin: null
+  };
+  
+  users.push(newUser);
+  
+  // Remove password from response
+  const { password: _, ...safeUser } = newUser;
+  
+  res.status(201).json({
+    data: safeUser,
+    message: 'User created successfully'
+  });
+});
+
+// Update user endpoint
+app.put('/api/users/:id', authenticateToken, (req, res) => {
+  const { id } = req.params;
+  const { role, id: userId } = req.user;
+  
+  // Only superadmin can update any user, others can only update their own profile
+  if (role !== 'superadmin' && userId !== id) {
+    return res.status(403).json({ error: 'Access denied' });
+  }
+  
+  const userIndex = users.findIndex(u => u.id === id);
+  
+  if (userIndex === -1) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+  
+  const { 
+    email, 
+    password, 
+    firstName, 
+    lastName, 
+    role: userRole, 
+    storeId, 
+    warehouseId, 
+    isActive 
+  } = req.body;
+  
+  // Check if email already exists (excluding current user)
+  if (email && email !== users[userIndex].email) {
+    const existingUser = users.find(u => u.email === email && u.id !== id);
+    if (existingUser) {
+      return res.status(400).json({ error: 'User with this email already exists' });
+    }
+  }
+  
+  // Only superadmin can change role and status
+  if (role !== 'superadmin') {
+    if (userRole !== undefined || isActive !== undefined) {
+      return res.status(403).json({ error: 'Access denied. Cannot modify role or status.' });
+    }
+  }
+  
+  // Validate role if being changed
+  if (userRole && role === 'superadmin') {
+    const validRoles = ['superadmin', 'retail_manager', 'warehouse_manager', 'staff'];
+    if (!validRoles.includes(userRole)) {
+      return res.status(400).json({ error: 'Invalid role. Valid roles: superadmin, retail_manager, warehouse_manager, staff' });
+    }
+  }
+  
+  // Update user
+  const updatedUser = {
+    ...users[userIndex],
+    email: email || users[userIndex].email,
+    password: password ? bcrypt.hashSync(password, 10) : users[userIndex].password,
+    firstName: firstName || users[userIndex].firstName,
+    lastName: lastName || users[userIndex].lastName,
+    role: userRole || users[userIndex].role,
+    storeId: storeId !== undefined ? storeId : users[userIndex].storeId,
+    warehouseId: warehouseId !== undefined ? warehouseId : users[userIndex].warehouseId,
+    isActive: isActive !== undefined ? isActive : users[userIndex].isActive
+  };
+  
+  users[userIndex] = updatedUser;
+  
+  // Remove password from response
+  const { password: _, ...safeUser } = updatedUser;
+  
+  res.json({
+    data: safeUser,
+    message: 'User updated successfully'
+  });
+});
+
+// Delete user endpoint (superadmin only)
+app.delete('/api/users/:id', authenticateToken, (req, res) => {
+  const { role, id: userId } = req.user;
+  
+  // Only superadmin can delete users
+  if (role !== 'superadmin') {
+    return res.status(403).json({ error: 'Access denied. Superadmin role required.' });
+  }
+  
+  // Prevent self-deletion
+  if (userId === req.params.id) {
+    return res.status(400).json({ error: 'Cannot delete your own account' });
+  }
+  
+  const userIndex = users.findIndex(u => u.id === req.params.id);
+  
+  if (userIndex === -1) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+  
+  // Soft delete
+  users[userIndex].isActive = false;
+  
+  res.json({
+    message: 'User deleted successfully'
+  });
 });
 
 // Error handling middleware

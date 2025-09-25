@@ -9,7 +9,8 @@ import {
   CogIcon,
   ArrowRightOnRectangleIcon,
   ClipboardDocumentListIcon,
-  PresentationChartLineIcon
+  PresentationChartLineIcon,
+  UsersIcon
 } from '@heroicons/react/24/outline';
 import { useAuthStore } from '../stores/authStore';
 
@@ -27,6 +28,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { name: 'StockTake', href: '/stocktake', icon: ClipboardDocumentListIcon },
     { name: 'Locations', href: '/locations', icon: BuildingOfficeIcon },
     { name: 'Items', href: '/items', icon: CubeIcon },
+    { name: 'Users', href: '/users', icon: UsersIcon, superadminOnly: true },
     { name: 'Analytics', href: '/analytics', icon: ChartBarIcon },
     { name: 'Reports', href: '/reports', icon: PresentationChartLineIcon },
     { name: 'Settings', href: '/settings', icon: CogIcon },
@@ -87,6 +89,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           {/* Navigation */}
           <nav className="flex-1 px-4 py-6 space-y-2">
             {navigation.map((item) => {
+              // Only show superadmin-only items to superadmin users
+              if (item.superadminOnly && user?.role !== 'superadmin') {
+                return null;
+              }
+              
               const isActive = router.pathname === item.href;
               return (
                 <Link
