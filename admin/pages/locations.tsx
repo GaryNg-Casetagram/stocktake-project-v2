@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
+import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 import { 
   PlusIcon, 
@@ -33,6 +34,7 @@ interface Location {
 }
 
 const LocationsPage: React.FC = () => {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -42,10 +44,23 @@ const LocationsPage: React.FC = () => {
   const [itemsPerPage] = useState(9);
   const queryClient = useQueryClient();
 
+  // Check authentication on component mount
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      router.push('/login');
+    }
+  }, [router]);
+
   // Fetch locations with pagination
-  const { data: locationsData, isLoading } = useQuery(
+  const { data: locationsData, isLoading, error } = useQuery(
     ['locations', searchTerm, typeFilter, statusFilter, currentPage],
     async () => {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
       const params = new URLSearchParams();
       if (searchTerm) params.append('search', searchTerm);
       if (typeFilter) params.append('type', typeFilter);
@@ -53,9 +68,31 @@ const LocationsPage: React.FC = () => {
       params.append('page', currentPage.toString());
       params.append('limit', itemsPerPage.toString());
       
-      const response = await fetch(`http://localhost:3005/api/locations?${params}`);
-      if (!response.ok) throw new Error('Failed to fetch locations');
+      const response = await fetch(`http://localhost:3005/api/locations?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('authToken');
+          router.push('/login');
+          throw new Error('Authentication expired');
+        }
+        throw new Error('Failed to fetch locations');
+      }
       return response.json();
+    },
+    {
+      retry: false,
+      onError: (error: any) => {
+        if (error.message === 'Authentication expired') {
+          toast.error('Session expired. Please login again.');
+        } else {
+          toast.error('Failed to load locations');
+        }
+      }
     }
   );
 
@@ -150,6 +187,23 @@ const LocationsPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Error State */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <XCircleIcon className="h-5 w-5 text-red-400" />
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">Error loading locations</h3>
+              <div className="mt-2 text-sm text-red-700">
+                <p>Please check your connection and try again.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Locations Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
