@@ -1,3 +1,6 @@
+// Load environment variables
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -6,7 +9,17 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
 const app = express();
+
+// Environment configuration
 const PORT = process.env.PORT || 3005;
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const JWT_SECRET = process.env.JWT_SECRET || 'demo-secret-key-change-this-in-production';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000', 'http://localhost:19006', 'http://localhost:3006'];
+const RATE_LIMIT_WINDOW_MS = parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 900000; // 15 minutes
+const RATE_LIMIT_MAX_REQUESTS = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100;
+const LOG_LEVEL = process.env.LOG_LEVEL || 'info';
+const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_ROUNDS) || 10;
 
 // In-memory database for demo
 const users = [
@@ -421,14 +434,14 @@ const locations = [
 // Security middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000', 'http://localhost:19006', 'http://localhost:3006'],
+  origin: ALLOWED_ORIGINS,
   credentials: true
 }));
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000, // limit each IP to 1000 requests per windowMs
+  windowMs: RATE_LIMIT_WINDOW_MS,
+  max: RATE_LIMIT_MAX_REQUESTS,
   message: 'Too many requests from this IP, please try again later.'
 });
 app.use(limiter);
@@ -456,7 +469,7 @@ const authenticateToken = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'demo-secret-key');
+    const decoded = jwt.verify(token, JWT_SECRET);
     const user = users.find(u => u.id === decoded.userId);
     
     if (!user || !user.isActive) {
@@ -504,8 +517,8 @@ app.post('/api/auth/login', async (req, res) => {
         storeId: user.storeId,
         warehouseId: user.warehouseId
       },
-      process.env.JWT_SECRET || 'demo-secret-key',
-      { expiresIn: '24h' }
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN }
     );
 
     res.json({
@@ -1143,7 +1156,7 @@ app.post('/api/users', authenticateToken, (req, res) => {
   }
   
   // Hash password
-  const hashedPassword = bcrypt.hashSync(password, 10);
+  const hashedPassword = bcrypt.hashSync(password, BCRYPT_ROUNDS);
   
   // Create new user
   const newUser = {

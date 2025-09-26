@@ -6,6 +6,6 @@ interface ApiState {
 }
 
 export const useApiStore = create<ApiState>((set) => ({
-  baseUrl: 'http://localhost:3005',
+  baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3005',
   setBaseUrl: (url: string) => set({ baseUrl: url }),
 }));
