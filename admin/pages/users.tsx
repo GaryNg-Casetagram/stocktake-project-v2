@@ -346,154 +346,213 @@ const UsersPage: React.FC = () => {
 
       {/* Users Table */}
       <div className="bg-white shadow rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th 
-                  className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                  onClick={() => handleSort('firstName')}
-                >
-                  <div className="flex items-center space-x-1">
-                    <span>User</span>
-                    {getSortIcon('firstName')}
-                  </div>
-                </th>
-                <th 
-                  className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 hidden sm:table-cell"
-                  onClick={() => handleSort('email')}
-                >
-                  <div className="flex items-center space-x-1">
-                    <span>Email</span>
-                    {getSortIcon('email')}
-                  </div>
-                </th>
-                <th 
-                  className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                  onClick={() => handleSort('role')}
-                >
-                  <div className="flex items-center space-x-1">
-                    <span>Role</span>
-                    {getSortIcon('role')}
-                  </div>
-                </th>
-                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
-                  Location
-                </th>
-                <th 
-                  className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                  onClick={() => handleSort('isActive')}
-                >
-                  <div className="flex items-center space-x-1">
-                    <span>Status</span>
-                    {getSortIcon('isActive')}
-                  </div>
-                </th>
-                <th 
-                  className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 hidden xl:table-cell"
-                  onClick={() => handleSort('lastLogin')}
-                >
-                  <div className="flex items-center space-x-1">
-                    <span>Last Login</span>
-                    {getSortIcon('lastLogin')}
-                  </div>
-                </th>
-                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+        {/* Mobile Card View for very small screens */}
+        <div className="block sm:hidden">
+          {isLoading ? (
+            <div className="flex flex-col justify-center items-center h-64 p-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <p className="mt-4 text-sm text-gray-500">Loading users...</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-200">
               {users.map((user: User) => (
-                <tr key={user.id} className="hover:bg-gray-50">
-                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10">
-                        <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                          <UserIcon className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600" />
+                <div key={user.id} className="p-4 hover:bg-gray-50">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center min-w-0 flex-1">
+                      <div className="flex-shrink-0 h-10 w-10">
+                        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                          <UserIcon className="h-6 w-6 text-blue-600" />
                         </div>
                       </div>
-                      <div className="ml-2 sm:ml-4 min-w-0 flex-1">
+                      <div className="ml-3 min-w-0 flex-1">
                         <div className="text-sm font-medium text-gray-900 truncate">
                           {user.firstName} {user.lastName}
                         </div>
-                        <div className="text-xs sm:text-sm text-gray-500">ID: {user.id}</div>
-                        <div className="text-xs text-gray-500 sm:hidden truncate">{user.email}</div>
-                        <div className="text-xs text-gray-500 sm:hidden mt-1">
-                          <span className={`inline-flex px-1.5 py-0.5 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}>
+                        <div className="text-xs text-gray-500 truncate">{user.email}</div>
+                        <div className="flex items-center mt-1 space-x-2">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}>
                             {getRoleLabel(user.role)}
                           </span>
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          }`}>
+                            {user.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          ID: {user.id}
                         </div>
                       </div>
                     </div>
-                  </td>
-                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden sm:table-cell">
-                    <div className="flex items-center">
-                      <EnvelopeIcon className="h-4 w-4 text-gray-400 mr-2" />
-                      <span className="text-sm text-gray-900">{user.email}</span>
-                    </div>
-                  </td>
-                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}>
-                      {getRoleLabel(user.role)}
-                    </span>
-                  </td>
-                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden lg:table-cell">
-                    <div className="text-sm text-gray-900">
-                      {user.storeId && (
-                        <div className="flex items-center">
-                          <BuildingOfficeIcon className="h-4 w-4 text-gray-400 mr-1" />
-                          <span>Store: {getLocationName(user.storeId)}</span>
-                        </div>
-                      )}
-                      {user.warehouseId && (
-                        <div className="flex items-center mt-1">
-                          <BuildingOfficeIcon className="h-4 w-4 text-gray-400 mr-1" />
-                          <span>Warehouse: {getLocationName(user.warehouseId)}</span>
-                        </div>
-                      )}
-                      {!user.storeId && !user.warehouseId && (
-                        <span className="text-gray-500">No location assigned</span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
-                      {user.isActive ? (
-                        <><CheckCircleIcon className="w-3 h-3 mr-1" />Active</>
-                      ) : (
-                        <><XCircleIcon className="w-3 h-3 mr-1" />Inactive</>
-                      )}
-                    </span>
-                  </td>
-                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden xl:table-cell">
-                    {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
-                  </td>
-                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-1 sm:space-x-2">
+                    <div className="flex space-x-2 ml-3">
                       <button
                         onClick={() => setEditingUser(user)}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-blue-600 hover:text-blue-900 p-1"
                         title="Edit user"
                       >
                         <PencilIcon className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(user.id)}
-                        className="text-red-600 hover:text-red-900"
+                        className="text-red-600 hover:text-red-900 p-1"
                         title="Delete user"
-                        disabled={user.id === '1'} // Prevent deleting superadmin
+                        disabled={user.id === '1'}
                       >
                         <TrashIcon className="h-4 w-4" />
                       </button>
                     </div>
-                  </td>
-                </tr>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          )}
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="hidden sm:block">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th 
+                    className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('firstName')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>User</span>
+                      {getSortIcon('firstName')}
+                    </div>
+                  </th>
+                  <th 
+                    className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('email')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Email</span>
+                      {getSortIcon('email')}
+                    </div>
+                  </th>
+                  <th 
+                    className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('role')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Role</span>
+                      {getSortIcon('role')}
+                    </div>
+                  </th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
+                    Location
+                  </th>
+                  <th 
+                    className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('isActive')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Status</span>
+                      {getSortIcon('isActive')}
+                    </div>
+                  </th>
+                  <th 
+                    className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 hidden xl:table-cell"
+                    onClick={() => handleSort('lastLogin')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Last Login</span>
+                      {getSortIcon('lastLogin')}
+                    </div>
+                  </th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {users.map((user: User) => (
+                  <tr key={user.id} className="hover:bg-gray-50">
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10">
+                          <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                            <UserIcon className="h-6 w-6 text-blue-600" />
+                          </div>
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">
+                            {user.firstName} {user.lastName}
+                          </div>
+                          <div className="text-sm text-gray-500">ID: {user.id}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <EnvelopeIcon className="h-4 w-4 text-gray-400 mr-2" />
+                        <span className="text-sm text-gray-900">{user.email}</span>
+                      </div>
+                    </td>
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}>
+                        {getRoleLabel(user.role)}
+                      </span>
+                    </td>
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden lg:table-cell">
+                      <div className="text-sm text-gray-900">
+                        {user.storeId && (
+                          <div className="flex items-center">
+                            <BuildingOfficeIcon className="h-4 w-4 text-gray-400 mr-1" />
+                            <span>Store: {getLocationName(user.storeId)}</span>
+                          </div>
+                        )}
+                        {user.warehouseId && (
+                          <div className="flex items-center mt-1">
+                            <BuildingOfficeIcon className="h-4 w-4 text-gray-400 mr-1" />
+                            <span>Warehouse: {getLocationName(user.warehouseId)}</span>
+                          </div>
+                        )}
+                        {!user.storeId && !user.warehouseId && (
+                          <span className="text-gray-500">No location assigned</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {user.isActive ? (
+                          <><CheckCircleIcon className="w-3 h-3 mr-1" />Active</>
+                        ) : (
+                          <><XCircleIcon className="w-3 h-3 mr-1" />Inactive</>
+                        )}
+                      </span>
+                    </td>
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden xl:table-cell">
+                      {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
+                    </td>
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => setEditingUser(user)}
+                          className="text-blue-600 hover:text-blue-900"
+                          title="Edit user"
+                        >
+                          <PencilIcon className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(user.id)}
+                          className="text-red-600 hover:text-red-900"
+                          title="Delete user"
+                          disabled={user.id === '1'}
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
