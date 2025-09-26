@@ -239,14 +239,62 @@ const items = [
 const sessions = [
   {
     id: 'session-demo-1',
-    name: 'Demo Session 1',
+    name: 'Q4 Stocktake Session',
     type: 'retail',
     status: 'active',
     storeId: 'store-1',
-    warehouseId: 'warehouse-1',
+    warehouseId: null,
     createdBy: '1',
     startedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
+    metadata: {}
+  },
+  {
+    id: 'session-demo-2',
+    name: 'Warehouse Cycle Count',
+    type: 'warehouse',
+    status: 'completed',
+    storeId: null,
+    warehouseId: 'warehouse-1',
+    createdBy: '1',
+    startedAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+    createdAt: new Date(Date.now() - 86400000).toISOString(),
+    metadata: {}
+  },
+  {
+    id: 'session-demo-3',
+    name: 'Spot Check Audit',
+    type: 'audit',
+    status: 'paused',
+    storeId: 'store-2',
+    warehouseId: null,
+    createdBy: '1',
+    startedAt: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+    createdAt: new Date(Date.now() - 3600000).toISOString(),
+    metadata: {}
+  },
+  {
+    id: 'session-demo-4',
+    name: 'Full Inventory Count',
+    type: 'inventory',
+    status: 'completed',
+    storeId: null,
+    warehouseId: 'warehouse-2',
+    createdBy: '1',
+    startedAt: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+    createdAt: new Date(Date.now() - 172800000).toISOString(),
+    metadata: {}
+  },
+  {
+    id: 'session-demo-5',
+    name: 'Partial Recount',
+    type: 'recount',
+    status: 'cancelled',
+    storeId: 'store-3',
+    warehouseId: null,
+    createdBy: '1',
+    startedAt: new Date(Date.now() - 259200000).toISOString(), // 3 days ago
+    createdAt: new Date(Date.now() - 259200000).toISOString(),
     metadata: {}
   }
 ];

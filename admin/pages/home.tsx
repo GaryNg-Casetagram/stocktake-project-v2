@@ -185,6 +185,21 @@ const HomeDashboard: React.FC = () => {
     statusInfo: getLocationStatus(location)
   }));
 
+  // Map session types to better descriptions
+  const getSessionTypeLabel = (type: string) => {
+    const typeMap: { [key: string]: string } = {
+      'retail': 'Stocktake',
+      'warehouse': 'Cycle Count',
+      'inventory': 'Inventory Count',
+      'audit': 'Audit Count',
+      'recount': 'Recount',
+      'spot': 'Spot Check',
+      'full': 'Full Count',
+      'partial': 'Partial Count'
+    };
+    return typeMap[type] || type.charAt(0).toUpperCase() + type.slice(1);
+  };
+
   // Quick action handlers
   const handleStartSession = () => {
     router.push('/stocktake');
@@ -332,7 +347,7 @@ const HomeDashboard: React.FC = () => {
       <div className="bg-white rounded-lg shadow p-4">
         <h3 className="text-base font-medium text-gray-900 mb-4 flex items-center">
           <MapPinIcon className="w-5 h-5 mr-2 text-blue-600" />
-          Location Status & Stocktake Activity
+          Location Status & Session Activity
         </h3>
         <div className="space-y-3">
           {locationsWithStatus.map((location: any) => {
@@ -414,7 +429,7 @@ const HomeDashboard: React.FC = () => {
                       <div>
                         <p className="text-xs font-medium text-gray-900">{location.statusInfo.sessionName}</p>
                         <p className="text-xs text-gray-500">
-                          {location.statusInfo.type} • {location.statusInfo.startedAt ? 
+                          {getSessionTypeLabel(location.statusInfo.type)} • {location.statusInfo.startedAt ? 
                             new Date(location.statusInfo.startedAt).toLocaleDateString() : 'Unknown'
                           }
                         </p>
@@ -447,7 +462,7 @@ const HomeDashboard: React.FC = () => {
                 </div>
                 <div className="ml-2">
                   <p className="text-xs font-medium text-gray-900">Start Session</p>
-                  <p className="text-xs text-gray-500">Begin counting</p>
+                  <p className="text-xs text-gray-500">Stocktake/Cycle Count</p>
                 </div>
               </div>
             </button>
