@@ -255,34 +255,34 @@ const ItemsPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Items</h1>
-          <p className="text-gray-600">Manage your inventory items</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Items</h1>
+          <p className="text-sm sm:text-base text-gray-600">Manage your inventory items</p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center space-x-2"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-md flex items-center justify-center space-x-2 text-sm sm:text-base w-fit sm:w-auto"
         >
-          <PlusIcon className="w-5 h-5" />
+          <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5" />
           <span>Add Item</span>
         </button>
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-lg shadow">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="md:col-span-2">
+      <div className="bg-white p-3 sm:p-4 rounded-lg shadow">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="sm:col-span-2 lg:col-span-2">
             <div className="relative">
-              <MagnifyingGlassIcon className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <MagnifyingGlassIcon className="w-4 h-4 sm:w-5 sm:h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search items..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-8 sm:pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
               />
             </div>
           </div>
@@ -290,7 +290,7 @@ const ItemsPage: React.FC = () => {
             <select
               value={storeFilter}
               onChange={(e) => setStoreFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
             >
               <option value="">All Stores</option>
               {locations
@@ -304,7 +304,7 @@ const ItemsPage: React.FC = () => {
             <select
               value={warehouseFilter}
               onChange={(e) => setWarehouseFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
             >
               <option value="">All Warehouses</option>
               {locations
@@ -330,7 +330,7 @@ const ItemsPage: React.FC = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort('name')}
                   >
                     <div className="flex items-center space-x-1">
@@ -339,7 +339,7 @@ const ItemsPage: React.FC = () => {
                     </div>
                   </th>
                   <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 hidden sm:table-cell"
                     onClick={() => handleSort('sku')}
                   >
                     <div className="flex items-center space-x-1">
@@ -348,7 +348,7 @@ const ItemsPage: React.FC = () => {
                     </div>
                   </th>
                   <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 hidden lg:table-cell"
                     onClick={() => handleSort('category')}
                   >
                     <div className="flex items-center space-x-1">
@@ -357,7 +357,7 @@ const ItemsPage: React.FC = () => {
                     </div>
                   </th>
                   <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 hidden lg:table-cell"
                     onClick={() => handleSort('unitPrice')}
                   >
                     <div className="flex items-center space-x-1">
@@ -365,13 +365,13 @@ const ItemsPage: React.FC = () => {
                       {getSortIcon('unitPrice')}
                     </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden xl:table-cell">
                     Location
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
                     RFID
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -379,37 +379,38 @@ const ItemsPage: React.FC = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {items.map((item: Item) => (
                   <tr key={item.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                            <CubeIcon className="h-6 w-6 text-blue-600" />
+                        <div className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10">
+                          <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                            <CubeIcon className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600" />
                           </div>
                         </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{item.name}</div>
-                          <div className="text-sm text-gray-500">{item.shortId}</div>
+                        <div className="ml-2 sm:ml-4">
+                          <div className="text-sm font-medium text-gray-900 truncate max-w-[120px] sm:max-w-none">{item.name}</div>
+                          <div className="text-xs sm:text-sm text-gray-500">{item.shortId}</div>
+                          <div className="text-xs text-gray-500 sm:hidden font-mono">{item.sku}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden sm:table-cell">
                       <div className="flex items-center">
                         <TagIcon className="h-4 w-4 text-gray-400 mr-2" />
                         <span className="text-sm text-gray-900 font-mono">{item.sku}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden lg:table-cell">
                       <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
                         {item.category}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden lg:table-cell">
                       <div className="flex items-center">
                         <CurrencyDollarIcon className="h-4 w-4 text-gray-400 mr-1" />
                         <span className="text-sm text-gray-900">{item.unitPrice.toFixed(2)}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden xl:table-cell">
                       <div className="text-sm text-gray-900">
                         <div className="flex items-center">
                           <BuildingOfficeIcon className="h-4 w-4 text-gray-400 mr-1" />
@@ -421,24 +422,26 @@ const ItemsPage: React.FC = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden sm:table-cell">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                         item.hasRfid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                       }`}>
                         {item.hasRfid ? 'Yes' : 'No'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex space-x-1 sm:space-x-2">
                         <button
                           onClick={() => setEditingItem(item)}
                           className="text-blue-600 hover:text-blue-900"
+                          title="Edit"
                         >
                           <PencilIcon className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(item.id)}
                           className="text-red-600 hover:text-red-900"
+                          title="Delete"
                         >
                           <TrashIcon className="h-4 w-4" />
                         </button>
