@@ -401,7 +401,7 @@ const LocationsPage: React.FC = () => {
   const totalPages = Math.ceil(totalLocations / itemsPerPage);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
         <div>
@@ -463,17 +463,17 @@ const LocationsPage: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-lg shadow">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="md:col-span-2">
+      <div className="bg-white p-3 sm:p-4 rounded-lg shadow">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="sm:col-span-2 lg:col-span-2">
             <div className="relative">
-              <MagnifyingGlassIcon className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <MagnifyingGlassIcon className="w-4 h-4 sm:w-5 sm:h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search locations..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-8 sm:pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
               />
             </div>
           </div>
@@ -481,7 +481,7 @@ const LocationsPage: React.FC = () => {
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
             >
               <option value="">All Types</option>
               <option value="store">Stores</option>
@@ -492,7 +492,7 @@ const LocationsPage: React.FC = () => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
             >
               <option value="">All Status</option>
               <option value="true">Active</option>
@@ -520,10 +520,10 @@ const LocationsPage: React.FC = () => {
       )}
 
       {/* Locations Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {isLoading ? (
           Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-lg shadow p-6 animate-pulse">
+            <div key={i} className="bg-white rounded-lg shadow p-4 sm:p-6 animate-pulse">
               <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
               <div className="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
               <div className="h-3 bg-gray-200 rounded w-2/3"></div>
@@ -534,7 +534,7 @@ const LocationsPage: React.FC = () => {
             <div key={location.id} className={`bg-white rounded-lg shadow hover:shadow-lg transition-shadow ${
               isSelectMode ? 'ring-2 ring-blue-500' : ''
             } ${selectedItems.includes(location.id) ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}>
-              <div className="p-6">
+              <div className="p-4 sm:p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center">
                     {isSelectMode && (
@@ -545,9 +545,9 @@ const LocationsPage: React.FC = () => {
                         className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-3"
                       />
                     )}
-                    <div className="text-2xl mr-3">{location.type === 'store' ? '🏪' : '🏭'}</div>
+                    <div className="text-xl sm:text-2xl mr-3">{location.type === 'store' ? '🏪' : '🏭'}</div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{location.name}</h3>
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-900">{location.name}</h3>
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                         location.type === 'store' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
                       }`}>
@@ -575,24 +575,24 @@ const LocationsPage: React.FC = () => {
                   )}
                 </div>
 
-                <div className="space-y-3">
-                  <div className="flex items-center text-sm text-gray-600">
-                    <MapPinIcon className="h-4 w-4 mr-2 text-gray-400" />
-                    <span>{location.address}, {location.city}, {location.state} {location.zipCode}</span>
+                <div className="space-y-2 sm:space-y-3">
+                  <div className="flex items-start text-xs sm:text-sm text-gray-600">
+                    <MapPinIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <span className="break-words">{location.address}, {location.city}, {location.state} {location.zipCode}</span>
                   </div>
                   
-                  <div className="flex items-center text-sm text-gray-600">
-                    <PhoneIcon className="h-4 w-4 mr-2 text-gray-400" />
+                  <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                    <PhoneIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-gray-400 flex-shrink-0" />
                     <span>{location.phone}</span>
                   </div>
                   
-                  <div className="flex items-center text-sm text-gray-600">
-                    <EnvelopeIcon className="h-4 w-4 mr-2 text-gray-400" />
-                    <span>{location.email}</span>
+                  <div className="flex items-start text-xs sm:text-sm text-gray-600">
+                    <EnvelopeIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <span className="break-all">{location.email}</span>
                   </div>
                   
-                  <div className="flex items-center text-sm text-gray-600">
-                    <UserIcon className="h-4 w-4 mr-2 text-gray-400" />
+                  <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                    <UserIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-gray-400 flex-shrink-0" />
                     <span>Manager: {location.manager}</span>
                   </div>
                 </div>
