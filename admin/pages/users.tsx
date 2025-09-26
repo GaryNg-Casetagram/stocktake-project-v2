@@ -413,12 +413,17 @@ const UsersPage: React.FC = () => {
                           <UserIcon className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600" />
                         </div>
                       </div>
-                      <div className="ml-2 sm:ml-4">
-                        <div className="text-sm font-medium text-gray-900 truncate max-w-[120px] sm:max-w-none">
+                      <div className="ml-2 sm:ml-4 min-w-0 flex-1">
+                        <div className="text-sm font-medium text-gray-900 truncate">
                           {user.firstName} {user.lastName}
                         </div>
                         <div className="text-xs sm:text-sm text-gray-500">ID: {user.id}</div>
-                        <div className="text-xs text-gray-500 sm:hidden">{user.email}</div>
+                        <div className="text-xs text-gray-500 sm:hidden truncate">{user.email}</div>
+                        <div className="text-xs text-gray-500 sm:hidden mt-1">
+                          <span className={`inline-flex px-1.5 py-0.5 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}>
+                            {getRoleLabel(user.role)}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -494,16 +499,16 @@ const UsersPage: React.FC = () => {
 
       {/* Empty State */}
       {!isLoading && users.length === 0 && (
-        <div className="text-center py-12">
-          <UserIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No users found</h3>
-          <p className="text-gray-500 mb-4">
+        <div className="text-center py-8 sm:py-12 px-4">
+          <UserIcon className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No users found</h3>
+          <p className="text-sm sm:text-base text-gray-500 mb-4">
             {searchTerm || roleFilter || statusFilter ? 'Try adjusting your search criteria.' : 'Get started by adding your first user.'}
           </p>
           {!searchTerm && !roleFilter && !statusFilter && (
             <button
               onClick={() => setShowCreateModal(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-md text-sm sm:text-base"
             >
               Add User
             </button>
@@ -513,26 +518,26 @@ const UsersPage: React.FC = () => {
 
       {/* Pagination */}
       {pagination && pagination.totalPages > 1 && (
-        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+        <div className="bg-white px-3 sm:px-4 lg:px-6 py-3 flex items-center justify-between border-t border-gray-200">
           <div className="flex-1 flex justify-between sm:hidden">
             <button
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
-              className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+              className="relative inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 text-xs sm:text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
             >
               Previous
             </button>
             <button
               onClick={() => setCurrentPage(Math.min(pagination.totalPages, currentPage + 1))}
               disabled={currentPage === pagination.totalPages}
-              className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+              className="ml-3 relative inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 text-xs sm:text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
             >
               Next
             </button>
           </div>
           <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm text-gray-700">
+              <p className="text-xs sm:text-sm text-gray-700">
                 Showing <span className="font-medium">{((currentPage - 1) * itemsPerPage) + 1}</span> to{' '}
                 <span className="font-medium">
                   {Math.min(currentPage * itemsPerPage, pagination.totalItems)}
@@ -545,7 +550,7 @@ const UsersPage: React.FC = () => {
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                  className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-xs sm:text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
                 >
                   Previous
                 </button>
@@ -555,7 +560,7 @@ const UsersPage: React.FC = () => {
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
-                      className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                      className={`relative inline-flex items-center px-3 sm:px-4 py-2 border text-xs sm:text-sm font-medium ${
                         currentPage === page
                           ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
                           : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
@@ -568,7 +573,7 @@ const UsersPage: React.FC = () => {
                 <button
                   onClick={() => setCurrentPage(Math.min(pagination.totalPages, currentPage + 1))}
                   disabled={currentPage === pagination.totalPages}
-                  className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                  className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-xs sm:text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
                 >
                   Next
                 </button>
@@ -689,22 +694,22 @@ const UserModal: React.FC<UserModalProps> = ({ user, locations, roles, onClose }
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+      <div className="relative top-4 sm:top-10 lg:top-20 mx-auto p-4 sm:p-5 border w-11/12 sm:w-96 lg:w-[500px] shadow-lg rounded-md bg-white">
         <div className="mt-3">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-gray-900">
+            <h3 className="text-base sm:text-lg font-medium text-gray-900">
               {user ? 'Edit User' : 'Create New User'}
             </h3>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600"
             >
-              <XCircleIcon className="w-6 h-6" />
+              <XCircleIcon className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
           
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">First Name</label>
                 <input
@@ -712,7 +717,7 @@ const UserModal: React.FC<UserModalProps> = ({ user, locations, roles, onClose }
                   required
                   value={formData.firstName}
                   onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm sm:text-base focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <div>
@@ -722,7 +727,7 @@ const UserModal: React.FC<UserModalProps> = ({ user, locations, roles, onClose }
                   required
                   value={formData.lastName}
                   onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm sm:text-base focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
             </div>
@@ -734,20 +739,20 @@ const UserModal: React.FC<UserModalProps> = ({ user, locations, roles, onClose }
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm sm:text-base focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
             
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Password {user && <span className="text-gray-500">(leave blank to keep current)</span>}
+                Password {user && <span className="text-gray-500 text-xs sm:text-sm">(leave blank to keep current)</span>}
               </label>
               <input
                 type="password"
                 required={!user}
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm sm:text-base focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
             
@@ -756,7 +761,7 @@ const UserModal: React.FC<UserModalProps> = ({ user, locations, roles, onClose }
               <select
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm sm:text-base focus:ring-blue-500 focus:border-blue-500"
               >
                 {roles.map((role) => (
                   <option key={role.value} value={role.value}>
@@ -766,13 +771,13 @@ const UserModal: React.FC<UserModalProps> = ({ user, locations, roles, onClose }
               </select>
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Store</label>
                 <select
                   value={formData.storeId}
                   onChange={(e) => setFormData({ ...formData, storeId: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm sm:text-base focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">No Store</option>
                   {locations.filter((loc: Location) => loc.type === 'store').map((loc: Location) => (
@@ -785,7 +790,7 @@ const UserModal: React.FC<UserModalProps> = ({ user, locations, roles, onClose }
                 <select
                   value={formData.warehouseId}
                   onChange={(e) => setFormData({ ...formData, warehouseId: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm sm:text-base focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">No Warehouse</option>
                   {locations.filter((loc: Location) => loc.type === 'warehouse').map((loc: Location) => (
@@ -810,18 +815,18 @@ const UserModal: React.FC<UserModalProps> = ({ user, locations, roles, onClose }
               </div>
             )}
             
-            <div className="flex justify-end space-x-3 pt-4">
+            <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 pt-4">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isLoading}
-                className="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                className="w-full sm:w-auto px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
               >
                 {isLoading ? 'Saving...' : (user ? 'Update User' : 'Create User')}
               </button>
