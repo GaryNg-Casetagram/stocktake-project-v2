@@ -10,7 +10,14 @@ import {
   ChartBarIcon,
   ArrowTrendingUpIcon,
   CheckCircleIcon,
-  PlusIcon
+  PlusIcon,
+  ClockIcon,
+  ExclamationTriangleIcon,
+  PauseIcon,
+  XCircleIcon,
+  TagIcon,
+  CalendarIcon,
+  MapPinIcon
 } from '@heroicons/react/24/outline';
 
 const HomeDashboard: React.FC = () => {
@@ -105,8 +112,62 @@ const HomeDashboard: React.FC = () => {
   const items = itemsData?.data || [];
   const sessions = sessionsData?.data || [];
 
+  // Session status counts
   const activeSessions = sessions.filter((session: any) => session.status === 'active');
   const completedSessions = sessions.filter((session: any) => session.status === 'completed');
+  const pausedSessions = sessions.filter((session: any) => session.status === 'paused');
+  const cancelledSessions = sessions.filter((session: any) => session.status === 'cancelled');
+
+  // Calculate timestamp ranges
+  const getTimestampRange = (sessions: any[]) => {
+    if (sessions.length === 0) return { earliest: null, latest: null };
+    
+    const timestamps = sessions
+      .map(s => new Date(s.startedAt || s.createdAt))
+      .filter(date => !isNaN(date.getTime()));
+    
+    if (timestamps.length === 0) return { earliest: null, latest: null };
+    
+    const earliest = new Date(Math.min(...timestamps.map(d => d.getTime())));
+    const latest = new Date(Math.max(...timestamps.map(d => d.getTime())));
+    
+    return { earliest, latest };
+  };
+
+  const activeRange = getTimestampRange(activeSessions);
+  const completedRange = getTimestampRange(completedSessions);
+
+  // Total SKU count
+  const totalSKUs = items.length;
+  const uniqueSKUs = new Set(items.map((item: any) => item.sku)).size;
+
+  // Location status with active sessions
+  const getLocationStatus = (location: any) => {
+    const locationSessions = sessions.filter((session: any) => 
+      session.storeId === location.id || session.warehouseId === location.id
+    );
+    
+    const activeLocationSessions = locationSessions.filter((session: any) => 
+      session.status === 'active' || session.status === 'paused'
+    );
+    
+    if (activeLocationSessions.length > 0) {
+      const session = activeLocationSessions[0];
+      return {
+        status: session.status,
+        sessionName: session.name,
+        startedAt: session.startedAt,
+        type: session.type
+      };
+    }
+    
+    return { status: 'idle', sessionName: null, startedAt: null, type: null };
+  };
+
+  const locationsWithStatus = locations.map((location: any) => ({
+    ...location,
+    statusInfo: getLocationStatus(location)
+  }));
 
   // Quick action handlers
   const handleStartSession = () => {
@@ -131,15 +192,15 @@ const HomeDashboard: React.FC = () => {
       value: locations.length,
       icon: BuildingOfficeIcon,
       color: 'bg-blue-500',
-      change: '+2',
+      change: `${locations.filter((l: any) => l.isActive).length} active`,
       changeType: 'positive'
     },
     {
-      name: 'Total Items',
-      value: items.length,
-      icon: CubeIcon,
+      name: 'Total SKUs',
+      value: totalSKUs,
+      icon: TagIcon,
       color: 'bg-green-500',
-      change: '+5',
+      change: `${uniqueSKUs} unique`,
       changeType: 'positive'
     },
     {
@@ -147,7 +208,7 @@ const HomeDashboard: React.FC = () => {
       value: activeSessions.length,
       icon: ClipboardDocumentListIcon,
       color: 'bg-yellow-500',
-      change: activeSessions.length > 0 ? 'Active' : 'None',
+      change: activeSessions.length > 0 ? 'In Progress' : 'None',
       changeType: activeSessions.length > 0 ? 'positive' : 'neutral'
     },
     {
@@ -155,7 +216,7 @@ const HomeDashboard: React.FC = () => {
       value: completedSessions.length,
       icon: CheckCircleIcon,
       color: 'bg-purple-500',
-      change: '+1',
+      change: pausedSessions.length > 0 ? `${pausedSessions.length} paused` : 'All done',
       changeType: 'positive'
     }
   ];
@@ -198,6 +259,122 @@ const HomeDashboard: React.FC = () => {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Session Status Overview */}
+      <div className="bg-white rounded-lg shadow p-4">
+        <h3 className="text-base font-medium text-gray-900 mb-4 flex items-center">
+          <ClipboardDocumentListIcon className="w-5 h-5 mr-2 text-blue-600" />
+          Session Status Overview
+        </h3>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="text-center p-3 bg-green-50 rounded-lg">
+            <div className="flex items-center justify-center mb-2">
+              <CheckCircleIcon className="w-6 h-6 text-green-600" />
+            </div>
+            <p className="text-lg font-semibold text-green-900">{completedSessions.length}</p>
+            <p className="text-xs text-green-700">Completed</p>
+            {completedRange.earliest && (
+              <p className="text-xs text-green-600 mt-1">
+                {completedRange.earliest.toLocaleDateString()} - {completedRange.latest.toLocaleDateString()}
+              </p>
+            )}
+          </div>
+          
+          <div className="text-center p-3 bg-yellow-50 rounded-lg">
+            <div className="flex items-center justify-center mb-2">
+              <ClockIcon className="w-6 h-6 text-yellow-600" />
+            </div>
+            <p className="text-lg font-semibold text-yellow-900">{activeSessions.length}</p>
+            <p className="text-xs text-yellow-700">Active</p>
+            {activeRange.earliest && (
+              <p className="text-xs text-yellow-600 mt-1">
+                Started: {activeRange.earliest.toLocaleDateString()}
+              </p>
+            )}
+          </div>
+          
+          <div className="text-center p-3 bg-orange-50 rounded-lg">
+            <div className="flex items-center justify-center mb-2">
+              <PauseIcon className="w-6 h-6 text-orange-600" />
+            </div>
+            <p className="text-lg font-semibold text-orange-900">{pausedSessions.length}</p>
+            <p className="text-xs text-orange-700">Paused</p>
+          </div>
+          
+          <div className="text-center p-3 bg-red-50 rounded-lg">
+            <div className="flex items-center justify-center mb-2">
+              <XCircleIcon className="w-6 h-6 text-red-600" />
+            </div>
+            <p className="text-lg font-semibold text-red-900">{cancelledSessions.length}</p>
+            <p className="text-xs text-red-700">Cancelled</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Location Status List */}
+      <div className="bg-white rounded-lg shadow p-4">
+        <h3 className="text-base font-medium text-gray-900 mb-4 flex items-center">
+          <MapPinIcon className="w-5 h-5 mr-2 text-blue-600" />
+          Location Status & Stocktake Activity
+        </h3>
+        <div className="space-y-3">
+          {locationsWithStatus.map((location: any) => {
+            const getStatusColor = (status: string) => {
+              switch (status) {
+                case 'active': return 'bg-green-100 text-green-800 border-green-200';
+                case 'paused': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+                case 'idle': return 'bg-gray-100 text-gray-800 border-gray-200';
+                default: return 'bg-gray-100 text-gray-800 border-gray-200';
+              }
+            };
+
+            const getStatusIcon = (status: string) => {
+              switch (status) {
+                case 'active': return <ClockIcon className="w-4 h-4" />;
+                case 'paused': return <PauseIcon className="w-4 h-4" />;
+                case 'idle': return <CheckCircleIcon className="w-4 h-4" />;
+                default: return <CheckCircleIcon className="w-4 h-4" />;
+              }
+            };
+
+            return (
+              <div key={location.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <div className="flex items-center space-x-3">
+                  <div className="text-2xl">
+                    {location.type === 'store' ? '🏪' : '🏭'}
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-900">{location.name}</h4>
+                    <p className="text-xs text-gray-500">{location.type.charAt(0).toUpperCase() + location.type.slice(1)} • {location.manager}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-3">
+                  {location.statusInfo.sessionName ? (
+                    <div className="text-right">
+                      <p className="text-xs font-medium text-gray-900">{location.statusInfo.sessionName}</p>
+                      <p className="text-xs text-gray-500">
+                        {location.statusInfo.type} • {location.statusInfo.startedAt ? 
+                          new Date(location.statusInfo.startedAt).toLocaleDateString() : 'Unknown'
+                        }
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="text-right">
+                      <p className="text-xs text-gray-500">No active session</p>
+                    </div>
+                  )}
+                  
+                  <div className={`flex items-center px-2 py-1 rounded-full border text-xs font-medium ${getStatusColor(location.statusInfo.status)}`}>
+                    {getStatusIcon(location.statusInfo.status)}
+                    <span className="ml-1 capitalize">{location.statusInfo.status}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Quick Actions */}
