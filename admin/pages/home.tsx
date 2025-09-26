@@ -9,7 +9,8 @@ import {
   ClipboardDocumentListIcon,
   ChartBarIcon,
   ArrowTrendingUpIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
+  PlusIcon
 } from '@heroicons/react/24/outline';
 
 const HomeDashboard: React.FC = () => {
@@ -107,6 +108,23 @@ const HomeDashboard: React.FC = () => {
   const activeSessions = sessions.filter((session: any) => session.status === 'active');
   const completedSessions = sessions.filter((session: any) => session.status === 'completed');
 
+  // Quick action handlers
+  const handleStartSession = () => {
+    router.push('/stocktake');
+  };
+
+  const handleAddItem = () => {
+    router.push('/items');
+  };
+
+  const handleAddLocation = () => {
+    router.push('/locations');
+  };
+
+  const handleViewAnalytics = () => {
+    router.push('/analytics');
+  };
+
   const stats = [
     {
       name: 'Total Locations',
@@ -143,33 +161,33 @@ const HomeDashboard: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-lg p-8 text-white">
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-lg p-6 text-white">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Welcome to StockTake</h1>
-            <p className="text-blue-100 mt-2">
+            <h1 className="text-2xl font-bold">Welcome to StockTake</h1>
+            <p className="text-blue-100 mt-1 text-sm">
               Your comprehensive inventory management dashboard
             </p>
           </div>
           <div className="hidden md:block">
-            <HomeIcon className="h-16 w-16 text-blue-200" />
+            <HomeIcon className="h-12 w-12 text-blue-200" />
           </div>
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => (
-          <div key={stat.name} className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+          <div key={stat.name} className="bg-white rounded-lg shadow p-4 hover:shadow-lg transition-shadow">
             <div className="flex items-center">
-              <div className={`p-3 rounded-lg ${stat.color}`}>
-                <stat.icon className="w-6 h-6 text-white" />
+              <div className={`p-2 rounded-lg ${stat.color}`}>
+                <stat.icon className="w-5 h-5 text-white" />
               </div>
-              <div className="ml-4 flex-1">
-                <p className="text-sm font-medium text-gray-600">{stat.name}</p>
-                <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
+              <div className="ml-3 flex-1">
+                <p className="text-xs font-medium text-gray-600">{stat.name}</p>
+                <p className="text-xl font-semibold text-gray-900">{stat.value}</p>
                 <p className={`text-xs ${
                   stat.changeType === 'positive' ? 'text-green-600' : 
                   stat.changeType === 'negative' ? 'text-red-600' : 'text-gray-600'
@@ -184,55 +202,67 @@ const HomeDashboard: React.FC = () => {
 
       {/* Quick Actions */}
       <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">Quick Actions</h3>
+        <div className="px-4 py-3 border-b border-gray-200">
+          <h3 className="text-base font-medium text-gray-900">Quick Actions</h3>
         </div>
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <button className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 text-left transition-colors">
+        <div className="p-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <button 
+              onClick={handleStartSession}
+              className="p-3 border border-gray-300 rounded-lg hover:bg-gray-50 text-left transition-colors group"
+            >
               <div className="flex items-center">
-                <div className="p-2 rounded-lg bg-blue-100">
-                  <ClipboardDocumentListIcon className="w-5 h-5 text-blue-600" />
+                <div className="p-2 rounded-lg bg-blue-100 group-hover:bg-blue-200 transition-colors">
+                  <ClipboardDocumentListIcon className="w-4 h-4 text-blue-600" />
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">Start New Session</p>
-                  <p className="text-xs text-gray-500">Begin inventory counting</p>
+                <div className="ml-2">
+                  <p className="text-xs font-medium text-gray-900">Start Session</p>
+                  <p className="text-xs text-gray-500">Begin counting</p>
                 </div>
               </div>
             </button>
             
-            <button className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 text-left transition-colors">
+            <button 
+              onClick={handleAddItem}
+              className="p-3 border border-gray-300 rounded-lg hover:bg-gray-50 text-left transition-colors group"
+            >
               <div className="flex items-center">
-                <div className="p-2 rounded-lg bg-green-100">
-                  <CubeIcon className="w-5 h-5 text-green-600" />
+                <div className="p-2 rounded-lg bg-green-100 group-hover:bg-green-200 transition-colors">
+                  <CubeIcon className="w-4 h-4 text-green-600" />
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">Add New Item</p>
-                  <p className="text-xs text-gray-500">Add inventory item</p>
+                <div className="ml-2">
+                  <p className="text-xs font-medium text-gray-900">Add Item</p>
+                  <p className="text-xs text-gray-500">New inventory</p>
                 </div>
               </div>
             </button>
             
-            <button className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 text-left transition-colors">
+            <button 
+              onClick={handleAddLocation}
+              className="p-3 border border-gray-300 rounded-lg hover:bg-gray-50 text-left transition-colors group"
+            >
               <div className="flex items-center">
-                <div className="p-2 rounded-lg bg-purple-100">
-                  <BuildingOfficeIcon className="w-5 h-5 text-purple-600" />
+                <div className="p-2 rounded-lg bg-purple-100 group-hover:bg-purple-200 transition-colors">
+                  <BuildingOfficeIcon className="w-4 h-4 text-purple-600" />
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">Add Location</p>
-                  <p className="text-xs text-gray-500">Create store or warehouse</p>
+                <div className="ml-2">
+                  <p className="text-xs font-medium text-gray-900">Add Location</p>
+                  <p className="text-xs text-gray-500">Store/warehouse</p>
                 </div>
               </div>
             </button>
             
-            <button className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 text-left transition-colors">
+            <button 
+              onClick={handleViewAnalytics}
+              className="p-3 border border-gray-300 rounded-lg hover:bg-gray-50 text-left transition-colors group"
+            >
               <div className="flex items-center">
-                <div className="p-2 rounded-lg bg-yellow-100">
-                  <ChartBarIcon className="w-5 h-5 text-yellow-600" />
+                <div className="p-2 rounded-lg bg-yellow-100 group-hover:bg-yellow-200 transition-colors">
+                  <ChartBarIcon className="w-4 h-4 text-yellow-600" />
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">View Analytics</p>
-                  <p className="text-xs text-gray-500">Check system metrics</p>
+                <div className="ml-2">
+                  <p className="text-xs font-medium text-gray-900">Analytics</p>
+                  <p className="text-xs text-gray-500">View metrics</p>
                 </div>
               </div>
             </button>
@@ -241,20 +271,42 @@ const HomeDashboard: React.FC = () => {
       </div>
 
       {/* System Status */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">System Status</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="bg-white rounded-lg shadow p-4">
+        <h3 className="text-base font-medium text-gray-900 mb-3">System Status</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="flex items-center">
-            <div className="w-3 h-3 bg-green-400 rounded-full mr-3"></div>
-            <span className="text-sm text-gray-700">API Server: Online</span>
+            <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+            <span className="text-xs text-gray-700">API Server: Online</span>
           </div>
           <div className="flex items-center">
-            <div className="w-3 h-3 bg-green-400 rounded-full mr-3"></div>
-            <span className="text-sm text-gray-700">Database: Connected</span>
+            <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+            <span className="text-xs text-gray-700">Database: Connected</span>
           </div>
           <div className="flex items-center">
-            <div className="w-3 h-3 bg-green-400 rounded-full mr-3"></div>
-            <span className="text-sm text-gray-700">Last Sync: 2 minutes ago</span>
+            <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+            <span className="text-xs text-gray-700">Last Sync: 2 minutes ago</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Activity */}
+      <div className="bg-white rounded-lg shadow p-4">
+        <h3 className="text-base font-medium text-gray-900 mb-3">Recent Activity</h3>
+        <div className="space-y-2">
+          <div className="flex items-center text-xs text-gray-600">
+            <div className="w-1.5 h-1.5 bg-blue-400 rounded-full mr-2"></div>
+            <span>New location "Main Warehouse" added</span>
+            <span className="ml-auto text-gray-400">2 hours ago</span>
+          </div>
+          <div className="flex items-center text-xs text-gray-600">
+            <div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2"></div>
+            <span>5 new items imported via CSV</span>
+            <span className="ml-auto text-gray-400">4 hours ago</span>
+          </div>
+          <div className="flex items-center text-xs text-gray-600">
+            <div className="w-1.5 h-1.5 bg-yellow-400 rounded-full mr-2"></div>
+            <span>StockTake session "Q4 Inventory" completed</span>
+            <span className="ml-auto text-gray-400">1 day ago</span>
           </div>
         </div>
       </div>
