@@ -12,7 +12,13 @@ import {
   BuildingOfficeIcon,
   PencilIcon,
   TrashIcon,
-  ArrowsUpDownIcon
+  ArrowsUpDownIcon,
+  ArrowDownTrayIcon,
+  ArrowUpTrayIcon,
+  DocumentArrowDownIcon,
+  DocumentArrowUpIcon,
+  Squares2X2Icon,
+  XCircleIcon
 } from '@heroicons/react/24/outline';
 
 interface Item {
@@ -51,6 +57,10 @@ const ItemsPage: React.FC = () => {
   const [itemsPerPage] = useState(10);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [isSelectMode, setIsSelectMode] = useState(false);
 
   // Check authentication and session validity on component mount
   useEffect(() => {
@@ -185,6 +195,132 @@ const ItemsPage: React.FC = () => {
     }
   };
 
+  // Multi-select functions
+  const handleSelectAll = () => {
+    const items = filteredItems || [];
+    if (selectedItems.length === items.length) {
+      setSelectedItems([]);
+    } else {
+      setSelectedItems(items.map((item: Item) => item.id));
+    }
+  };
+
+  const handleSelectItem = (id: string) => {
+    setSelectedItems(prev => 
+      prev.includes(id) 
+        ? prev.filter(item => item !== id)
+        : [...prev, id]
+    );
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedItems.length === 0) return;
+    if (window.confirm(`Are you sure you want to delete ${selectedItems.length} item(s)?`)) {
+      selectedItems.forEach(id => deleteItemMutation.mutate(id));
+      setSelectedItems([]);
+      setIsSelectMode(false);
+    }
+  };
+
+  const handleBulkExport = () => {
+    const items = filteredItems || [];
+    const selectedItemsData = items.filter((item: Item) => 
+      selectedItems.includes(item.id)
+    );
+    
+    const csvContent = [
+      ['SKU', 'Short ID', 'Name', 'Description', 'Category', 'Unit Price', 'Store', 'Warehouse', 'Has RFID', 'Active'],
+      ...selectedItemsData.map((item: Item) => [
+        item.sku,
+        item.shortId,
+        item.name,
+        item.description,
+        item.category,
+        item.unitPrice.toString(),
+        getLocationName(item.storeId),
+        getLocationName(item.warehouseId),
+        item.hasRfid ? 'Yes' : 'No',
+        item.isActive ? 'Yes' : 'No'
+      ])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `items-export-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    
+    toast.success(`Exported ${selectedItems.length} item(s)`);
+    setSelectedItems([]);
+    setIsSelectMode(false);
+  };
+
+  const handleFullExport = () => {
+    const items = filteredItems || [];
+    
+    const csvContent = [
+      ['SKU', 'Short ID', 'Name', 'Description', 'Category', 'Unit Price', 'Store', 'Warehouse', 'Has RFID', 'Active'],
+      ...items.map((item: Item) => [
+        item.sku,
+        item.shortId,
+        item.name,
+        item.description,
+        item.category,
+        item.unitPrice.toString(),
+        getLocationName(item.storeId),
+        getLocationName(item.warehouseId),
+        item.hasRfid ? 'Yes' : 'No',
+        item.isActive ? 'Yes' : 'No'
+      ])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `all-items-export-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    
+    toast.success(`Exported all ${items.length} item(s)`);
+  };
+
+  const handleImport = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const csv = e.target?.result as string;
+      const lines = csv.split('\n');
+      const headers = lines[0].split(',');
+      
+      const items = lines.slice(1).map(line => {
+        const values = line.split(',');
+        return {
+          sku: values[0]?.trim(),
+          shortId: values[1]?.trim(),
+          name: values[2]?.trim(),
+          description: values[3]?.trim(),
+          category: values[4]?.trim(),
+          unitPrice: parseFloat(values[5]?.trim() || '0'),
+          storeId: values[6]?.trim(),
+          warehouseId: values[7]?.trim(),
+          hasRfid: values[8]?.trim().toLowerCase() === 'yes',
+          isActive: values[9]?.trim().toLowerCase() === 'yes'
+        };
+      }).filter(item => item.name);
+
+      // Import items one by one
+      items.forEach(item => {
+        createItemMutation.mutate(item);
+      });
+      
+      toast.success(`Importing ${items.length} item(s)...`);
+      setShowImportModal(false);
+    };
+    reader.readAsText(file);
+  };
+
   const handleSort = (field: string) => {
     if (sortBy === field) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
@@ -262,13 +398,58 @@ const ItemsPage: React.FC = () => {
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Items</h1>
           <p className="text-sm sm:text-base text-gray-600">Manage your inventory items</p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-md flex items-center justify-center space-x-2 text-sm sm:text-base w-fit sm:w-auto"
-        >
-          <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span>Add Item</span>
-        </button>
+        <div className="flex flex-wrap gap-2">
+          {isSelectMode && selectedItems.length > 0 && (
+            <>
+              <button
+                onClick={handleBulkDelete}
+                className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md flex items-center space-x-2 text-sm"
+              >
+                <TrashIcon className="w-4 h-4" />
+                <span>Delete ({selectedItems.length})</span>
+              </button>
+              <button
+                onClick={handleBulkExport}
+                className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md flex items-center space-x-2 text-sm"
+              >
+                <DocumentArrowDownIcon className="w-4 h-4" />
+                <span>Export ({selectedItems.length})</span>
+              </button>
+            </>
+          )}
+          <button
+            onClick={() => setIsSelectMode(!isSelectMode)}
+            className={`px-3 py-2 rounded-md flex items-center space-x-2 text-sm ${
+              isSelectMode 
+                ? 'bg-gray-600 hover:bg-gray-700 text-white' 
+                : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+            }`}
+          >
+            <Squares2X2Icon className="w-4 h-4" />
+            <span>{isSelectMode ? 'Cancel' : 'Select'}</span>
+          </button>
+          <button
+            onClick={() => setShowImportModal(true)}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-md flex items-center space-x-2 text-sm"
+          >
+            <ArrowUpTrayIcon className="w-4 h-4" />
+            <span>Import</span>
+          </button>
+          <button
+            onClick={handleFullExport}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-md flex items-center space-x-2 text-sm"
+          >
+            <ArrowDownTrayIcon className="w-4 h-4" />
+            <span>Export All</span>
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md flex items-center space-x-2 text-sm"
+          >
+            <PlusIcon className="w-4 h-4" />
+            <span>Add Item</span>
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -329,6 +510,16 @@ const ItemsPage: React.FC = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
+                  {isSelectMode && (
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <input
+                        type="checkbox"
+                        checked={selectedItems.length === (filteredItems?.length || 0) && filteredItems?.length > 0}
+                        onChange={handleSelectAll}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                    </th>
+                  )}
                   <th 
                     className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort('name')}
@@ -378,7 +569,19 @@ const ItemsPage: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {items.map((item: Item) => (
-                  <tr key={item.id} className="hover:bg-gray-50">
+                  <tr key={item.id} className={`hover:bg-gray-50 ${
+                    selectedItems.includes(item.id) ? 'bg-blue-50' : ''
+                  }`}>
+                    {isSelectMode && (
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                        <input
+                          type="checkbox"
+                          checked={selectedItems.includes(item.id)}
+                          onChange={() => handleSelectItem(item.id)}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                      </td>
+                    )}
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10">
@@ -430,22 +633,24 @@ const ItemsPage: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-1 sm:space-x-2">
-                        <button
-                          onClick={() => setEditingItem(item)}
-                          className="text-blue-600 hover:text-blue-900"
-                          title="Edit"
-                        >
-                          <PencilIcon className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(item.id)}
-                          className="text-red-600 hover:text-red-900"
-                          title="Delete"
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </button>
-                      </div>
+                      {!isSelectMode && (
+                        <div className="flex space-x-1 sm:space-x-2">
+                          <button
+                            onClick={() => setEditingItem(item)}
+                            className="text-blue-600 hover:text-blue-900"
+                            title="Edit"
+                          >
+                            <PencilIcon className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(item.id)}
+                            className="text-red-600 hover:text-red-900"
+                            title="Delete"
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -536,7 +741,7 @@ const ItemsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Create/Edit Modal */}
+      {/* Modals */}
       {(showCreateModal || editingItem) && (
         <ItemModal
           item={editingItem}
@@ -545,6 +750,20 @@ const ItemsPage: React.FC = () => {
             setShowCreateModal(false);
             setEditingItem(null);
           }}
+        />
+      )}
+
+      {showImportModal && (
+        <ImportModal
+          onClose={() => setShowImportModal(false)}
+          onImport={handleImport}
+        />
+      )}
+
+      {showExportModal && (
+        <ExportModal
+          onClose={() => setShowExportModal(false)}
+          onExport={handleFullExport}
         />
       )}
     </div>
@@ -798,6 +1017,130 @@ const ItemModal: React.FC<ItemModalProps> = ({ item, locations, onClose }) => {
               </button>
             </div>
           </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Import Modal Component
+const ImportModal: React.FC<{ onClose: () => void; onImport: (file: File) => void }> = ({ onClose, onImport }) => {
+  const [file, setFile] = useState<File | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+    }
+  };
+
+  const handleSubmit = () => {
+    if (file) {
+      onImport(file);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="mt-3">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-gray-900">Import Items</h3>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <XCircleIcon className="w-6 h-6" />
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">CSV File</label>
+              <input
+                type="file"
+                accept=".csv"
+                onChange={handleFileChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            
+            <div className="bg-gray-50 p-3 rounded-md">
+              <h4 className="text-sm font-medium text-gray-900 mb-2">CSV Format:</h4>
+              <p className="text-xs text-gray-600">
+                SKU, Short ID, Name, Description, Category, Unit Price, Store ID, Warehouse ID, Has RFID, Active
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                Has RFID and Active should be "Yes" or "No"
+              </p>
+            </div>
+            
+            <div className="flex justify-end space-x-3 pt-4">
+              <button
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={!file}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+              >
+                Import
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Export Modal Component
+const ExportModal: React.FC<{ onClose: () => void; onExport: () => void }> = ({ onClose, onExport }) => {
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="mt-3">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-gray-900">Export Items</h3>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <XCircleIcon className="w-6 h-6" />
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="bg-gray-50 p-3 rounded-md">
+              <h4 className="text-sm font-medium text-gray-900 mb-2">Export Options:</h4>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• CSV format with all item data</li>
+                <li>• Includes: SKU, Name, Category, Price, Locations</li>
+                <li>• Ready for Excel or Google Sheets</li>
+              </ul>
+            </div>
+            
+            <div className="flex justify-end space-x-3 pt-4">
+              <button
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  onExport();
+                  onClose();
+                }}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+              >
+                Export All
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
