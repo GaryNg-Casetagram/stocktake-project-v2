@@ -141,7 +141,7 @@ const HomeDashboard: React.FC = () => {
   const totalSKUs = items.length;
   const uniqueSKUs = new Set(items.map((item: any) => item.sku)).size;
 
-  // Location status with active sessions
+  // Location status with active sessions and session counts
   const getLocationStatus = (location: any) => {
     const locationSessions = sessions.filter((session: any) => 
       session.storeId === location.id || session.warehouseId === location.id
@@ -151,17 +151,33 @@ const HomeDashboard: React.FC = () => {
       session.status === 'active' || session.status === 'paused'
     );
     
+    // Count sessions by status
+    const sessionCounts = {
+      total: locationSessions.length,
+      active: locationSessions.filter(s => s.status === 'active').length,
+      completed: locationSessions.filter(s => s.status === 'completed').length,
+      paused: locationSessions.filter(s => s.status === 'paused').length,
+      cancelled: locationSessions.filter(s => s.status === 'cancelled').length
+    };
+    
     if (activeLocationSessions.length > 0) {
       const session = activeLocationSessions[0];
       return {
         status: session.status,
         sessionName: session.name,
         startedAt: session.startedAt,
-        type: session.type
+        type: session.type,
+        sessionCounts
       };
     }
     
-    return { status: 'idle', sessionName: null, startedAt: null, type: null };
+    return { 
+      status: 'idle', 
+      sessionName: null, 
+      startedAt: null, 
+      type: null,
+      sessionCounts
+    };
   };
 
   const locationsWithStatus = locations.map((location: any) => ({
@@ -339,36 +355,73 @@ const HomeDashboard: React.FC = () => {
             };
 
             return (
-              <div key={location.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="flex items-center space-x-3">
-                  <div className="text-2xl">
-                    {location.type === 'store' ? '🏪' : '🏭'}
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-900">{location.name}</h4>
-                    <p className="text-xs text-gray-500">{location.type.charAt(0).toUpperCase() + location.type.slice(1)} • {location.manager}</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-3">
-                  {location.statusInfo.sessionName ? (
-                    <div className="text-right">
-                      <p className="text-xs font-medium text-gray-900">{location.statusInfo.sessionName}</p>
-                      <p className="text-xs text-gray-500">
-                        {location.statusInfo.type} • {location.statusInfo.startedAt ? 
-                          new Date(location.statusInfo.startedAt).toLocaleDateString() : 'Unknown'
-                        }
-                      </p>
+              <div key={location.id} className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center space-x-3">
+                    <div className="text-2xl">
+                      {location.type === 'store' ? '🏪' : '🏭'}
                     </div>
-                  ) : (
-                    <div className="text-right">
-                      <p className="text-xs text-gray-500">No active session</p>
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-900">{location.name}</h4>
+                      <p className="text-xs text-gray-500">{location.type.charAt(0).toUpperCase() + location.type.slice(1)} • {location.manager}</p>
                     </div>
-                  )}
+                  </div>
                   
                   <div className={`flex items-center px-2 py-1 rounded-full border text-xs font-medium ${getStatusColor(location.statusInfo.status)}`}>
                     {getStatusIcon(location.statusInfo.status)}
                     <span className="ml-1 capitalize">{location.statusInfo.status}</span>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    {/* Session Counts */}
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs text-gray-500">Sessions:</span>
+                      <div className="flex items-center space-x-1">
+                        {location.statusInfo.sessionCounts.total > 0 ? (
+                          <>
+                            <span className="text-xs font-medium text-gray-900">{location.statusInfo.sessionCounts.total}</span>
+                            <span className="text-xs text-gray-400">total</span>
+                            {location.statusInfo.sessionCounts.completed > 0 && (
+                              <>
+                                <span className="text-xs text-green-600">•</span>
+                                <span className="text-xs text-green-600">{location.statusInfo.sessionCounts.completed} completed</span>
+                              </>
+                            )}
+                            {location.statusInfo.sessionCounts.active > 0 && (
+                              <>
+                                <span className="text-xs text-yellow-600">•</span>
+                                <span className="text-xs text-yellow-600">{location.statusInfo.sessionCounts.active} active</span>
+                              </>
+                            )}
+                            {location.statusInfo.sessionCounts.paused > 0 && (
+                              <>
+                                <span className="text-xs text-orange-600">•</span>
+                                <span className="text-xs text-orange-600">{location.statusInfo.sessionCounts.paused} paused</span>
+                              </>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-xs text-gray-400">No sessions</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="text-right">
+                    {location.statusInfo.sessionName ? (
+                      <div>
+                        <p className="text-xs font-medium text-gray-900">{location.statusInfo.sessionName}</p>
+                        <p className="text-xs text-gray-500">
+                          {location.statusInfo.type} • {location.statusInfo.startedAt ? 
+                            new Date(location.statusInfo.startedAt).toLocaleDateString() : 'Unknown'
+                          }
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-500">No active session</p>
+                    )}
                   </div>
                 </div>
               </div>
