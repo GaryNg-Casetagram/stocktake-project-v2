@@ -127,6 +127,32 @@ const LocationsPage: React.FC = () => {
     }
   );
 
+  // Create location mutation
+  const createLocationMutation = useMutation(
+    async (data: any) => {
+      if (!token) throw new Error('No authentication token');
+      const response = await fetch('http://localhost:3005/api/locations', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Failed to create location');
+      return response.json();
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries('locations');
+        toast.success('Location created successfully');
+      },
+      onError: () => {
+        toast.error('Failed to create location');
+      },
+    }
+  );
+
   // Delete location mutation
   const deleteLocationMutation = useMutation(
     async (id: string) => {
@@ -191,29 +217,45 @@ const LocationsPage: React.FC = () => {
       selectedItems.includes(location.id)
     );
     
+    if (selectedLocations.length === 0) {
+      toast.error('No locations selected for export');
+      return;
+    }
+    
+    const escapeCSV = (value: any) => {
+      if (value === null || value === undefined) return '';
+      const stringValue = String(value);
+      if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+        return `"${stringValue.replace(/"/g, '""')}"`;
+      }
+      return stringValue;
+    };
+    
     const csvContent = [
       ['Name', 'Type', 'Address', 'City', 'State', 'Zip Code', 'Country', 'Phone', 'Email', 'Manager', 'Active'],
       ...selectedLocations.map((location: Location) => [
-        location.name,
-        location.type,
-        location.address,
-        location.city,
-        location.state,
-        location.zipCode,
-        location.country,
-        location.phone,
-        location.email,
-        location.manager,
-        location.isActive ? 'Yes' : 'No'
+        escapeCSV(location.name),
+        escapeCSV(location.type),
+        escapeCSV(location.address),
+        escapeCSV(location.city),
+        escapeCSV(location.state),
+        escapeCSV(location.zipCode),
+        escapeCSV(location.country),
+        escapeCSV(location.phone),
+        escapeCSV(location.email),
+        escapeCSV(location.manager),
+        escapeCSV(location.isActive ? 'Yes' : 'No')
       ])
     ].map(row => row.join(',')).join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `locations-export-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
     
     toast.success(`Exported ${selectedItems.length} location(s)`);
@@ -224,29 +266,45 @@ const LocationsPage: React.FC = () => {
   const handleFullExport = () => {
     const locations = locationsData?.data || [];
     
+    if (locations.length === 0) {
+      toast.error('No locations to export');
+      return;
+    }
+    
+    const escapeCSV = (value: any) => {
+      if (value === null || value === undefined) return '';
+      const stringValue = String(value);
+      if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+        return `"${stringValue.replace(/"/g, '""')}"`;
+      }
+      return stringValue;
+    };
+    
     const csvContent = [
       ['Name', 'Type', 'Address', 'City', 'State', 'Zip Code', 'Country', 'Phone', 'Email', 'Manager', 'Active'],
       ...locations.map((location: Location) => [
-        location.name,
-        location.type,
-        location.address,
-        location.city,
-        location.state,
-        location.zipCode,
-        location.country,
-        location.phone,
-        location.email,
-        location.manager,
-        location.isActive ? 'Yes' : 'No'
+        escapeCSV(location.name),
+        escapeCSV(location.type),
+        escapeCSV(location.address),
+        escapeCSV(location.city),
+        escapeCSV(location.state),
+        escapeCSV(location.zipCode),
+        escapeCSV(location.country),
+        escapeCSV(location.phone),
+        escapeCSV(location.email),
+        escapeCSV(location.manager),
+        escapeCSV(location.isActive ? 'Yes' : 'No')
       ])
     ].map(row => row.join(',')).join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `all-locations-export-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
     
     toast.success(`Exported all ${locations.length} location(s)`);

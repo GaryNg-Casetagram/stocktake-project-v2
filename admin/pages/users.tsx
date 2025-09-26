@@ -196,6 +196,62 @@ const UsersPage: React.FC = () => {
   const roles = rolesData?.data || [];
   const pagination = usersData?.pagination;
 
+  // Filter and sort users
+  const filteredUsers = users.filter((user: User) => {
+    const matchesSearch = !searchTerm || 
+      user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesRole = !roleFilter || user.role === roleFilter;
+    const matchesStatus = !statusFilter || 
+      (statusFilter === 'active' && user.isActive) ||
+      (statusFilter === 'inactive' && !user.isActive);
+    
+    return matchesSearch && matchesRole && matchesStatus;
+  }).sort((a: User, b: User) => {
+    const aValue = a[sortBy as keyof User];
+    const bValue = b[sortBy as keyof User];
+    
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      return sortOrder === 'asc' 
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue);
+    }
+    
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+    }
+    
+    return 0;
+  });
+
+  // Create user mutation
+  const createUserMutation = useMutation(
+    async (data: any) => {
+      if (!token) throw new Error('No authentication token');
+      const response = await fetch('http://localhost:3005/api/users', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Failed to create user');
+      return response.json();
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries('users');
+        toast.success('User created successfully');
+      },
+      onError: () => {
+        toast.error('Failed to create user');
+      },
+    }
+  );
+
   // Delete user mutation
   const deleteUserMutation = useMutation(
     async (id: string) => {
@@ -260,26 +316,42 @@ const UsersPage: React.FC = () => {
       selectedItems.includes(user.id)
     );
     
+    if (selectedUsers.length === 0) {
+      toast.error('No users selected for export');
+      return;
+    }
+    
+    const escapeCSV = (value: any) => {
+      if (value === null || value === undefined) return '';
+      const stringValue = String(value);
+      if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+        return `"${stringValue.replace(/"/g, '""')}"`;
+      }
+      return stringValue;
+    };
+    
     const csvContent = [
       ['Email', 'First Name', 'Last Name', 'Role', 'Store', 'Warehouse', 'Active', 'Last Login'],
       ...selectedUsers.map((user: User) => [
-        user.email,
-        user.firstName,
-        user.lastName,
-        user.role,
-        user.storeId ? getLocationName(user.storeId) : '',
-        user.warehouseId ? getLocationName(user.warehouseId) : '',
-        user.isActive ? 'Yes' : 'No',
-        user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'
+        escapeCSV(user.email),
+        escapeCSV(user.firstName),
+        escapeCSV(user.lastName),
+        escapeCSV(user.role),
+        escapeCSV(user.storeId ? getLocationName(user.storeId) : ''),
+        escapeCSV(user.warehouseId ? getLocationName(user.warehouseId) : ''),
+        escapeCSV(user.isActive ? 'Yes' : 'No'),
+        escapeCSV(user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never')
       ])
     ].map(row => row.join(',')).join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `users-export-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
     
     toast.success(`Exported ${selectedItems.length} user(s)`);
@@ -290,26 +362,42 @@ const UsersPage: React.FC = () => {
   const handleFullExport = () => {
     const users = filteredUsers || [];
     
+    if (users.length === 0) {
+      toast.error('No users to export');
+      return;
+    }
+    
+    const escapeCSV = (value: any) => {
+      if (value === null || value === undefined) return '';
+      const stringValue = String(value);
+      if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+        return `"${stringValue.replace(/"/g, '""')}"`;
+      }
+      return stringValue;
+    };
+    
     const csvContent = [
       ['Email', 'First Name', 'Last Name', 'Role', 'Store', 'Warehouse', 'Active', 'Last Login'],
       ...users.map((user: User) => [
-        user.email,
-        user.firstName,
-        user.lastName,
-        user.role,
-        user.storeId ? getLocationName(user.storeId) : '',
-        user.warehouseId ? getLocationName(user.warehouseId) : '',
-        user.isActive ? 'Yes' : 'No',
-        user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'
+        escapeCSV(user.email),
+        escapeCSV(user.firstName),
+        escapeCSV(user.lastName),
+        escapeCSV(user.role),
+        escapeCSV(user.storeId ? getLocationName(user.storeId) : ''),
+        escapeCSV(user.warehouseId ? getLocationName(user.warehouseId) : ''),
+        escapeCSV(user.isActive ? 'Yes' : 'No'),
+        escapeCSV(user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never')
       ])
     ].map(row => row.join(',')).join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `all-users-export-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
     
     toast.success(`Exported all ${users.length} user(s)`);

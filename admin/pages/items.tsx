@@ -164,6 +164,61 @@ const ItemsPage: React.FC = () => {
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const locations = locationsData?.data || [];
 
+  // Filter and sort items
+  const filteredItems = items.filter((item: Item) => {
+    const matchesSearch = !searchTerm || 
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.shortId.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStore = !storeFilter || item.storeId === storeFilter;
+    const matchesWarehouse = !warehouseFilter || item.warehouseId === warehouseFilter;
+    const matchesCategory = !categoryFilter || item.category === categoryFilter;
+    
+    return matchesSearch && matchesStore && matchesWarehouse && matchesCategory;
+  }).sort((a: Item, b: Item) => {
+    const aValue = a[sortBy as keyof Item];
+    const bValue = b[sortBy as keyof Item];
+    
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      return sortOrder === 'asc' 
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue);
+    }
+    
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+    }
+    
+    return 0;
+  });
+
+  // Create item mutation
+  const createItemMutation = useMutation(
+    async (data: any) => {
+      if (!token) throw new Error('No authentication token');
+      const response = await fetch('http://localhost:3005/api/items', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Failed to create item');
+      return response.json();
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries('items');
+        toast.success('Item created successfully');
+      },
+      onError: () => {
+        toast.error('Failed to create item');
+      },
+    }
+  );
+
   // Delete item mutation
   const deleteItemMutation = useMutation(
     async (id: string) => {
@@ -228,28 +283,44 @@ const ItemsPage: React.FC = () => {
       selectedItems.includes(item.id)
     );
     
+    if (selectedItemsData.length === 0) {
+      toast.error('No items selected for export');
+      return;
+    }
+    
+    const escapeCSV = (value: any) => {
+      if (value === null || value === undefined) return '';
+      const stringValue = String(value);
+      if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+        return `"${stringValue.replace(/"/g, '""')}"`;
+      }
+      return stringValue;
+    };
+    
     const csvContent = [
       ['SKU', 'Short ID', 'Name', 'Description', 'Category', 'Unit Price', 'Store', 'Warehouse', 'Has RFID', 'Active'],
       ...selectedItemsData.map((item: Item) => [
-        item.sku,
-        item.shortId,
-        item.name,
-        item.description,
-        item.category,
-        item.unitPrice.toString(),
-        getLocationName(item.storeId),
-        getLocationName(item.warehouseId),
-        item.hasRfid ? 'Yes' : 'No',
-        item.isActive ? 'Yes' : 'No'
+        escapeCSV(item.sku),
+        escapeCSV(item.shortId),
+        escapeCSV(item.name),
+        escapeCSV(item.description),
+        escapeCSV(item.category),
+        escapeCSV(item.unitPrice),
+        escapeCSV(getLocationName(item.storeId)),
+        escapeCSV(getLocationName(item.warehouseId)),
+        escapeCSV(item.hasRfid ? 'Yes' : 'No'),
+        escapeCSV(item.isActive ? 'Yes' : 'No')
       ])
     ].map(row => row.join(',')).join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `items-export-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
     
     toast.success(`Exported ${selectedItems.length} item(s)`);
@@ -260,28 +331,44 @@ const ItemsPage: React.FC = () => {
   const handleFullExport = () => {
     const items = filteredItems || [];
     
+    if (items.length === 0) {
+      toast.error('No items to export');
+      return;
+    }
+    
+    const escapeCSV = (value: any) => {
+      if (value === null || value === undefined) return '';
+      const stringValue = String(value);
+      if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+        return `"${stringValue.replace(/"/g, '""')}"`;
+      }
+      return stringValue;
+    };
+    
     const csvContent = [
       ['SKU', 'Short ID', 'Name', 'Description', 'Category', 'Unit Price', 'Store', 'Warehouse', 'Has RFID', 'Active'],
       ...items.map((item: Item) => [
-        item.sku,
-        item.shortId,
-        item.name,
-        item.description,
-        item.category,
-        item.unitPrice.toString(),
-        getLocationName(item.storeId),
-        getLocationName(item.warehouseId),
-        item.hasRfid ? 'Yes' : 'No',
-        item.isActive ? 'Yes' : 'No'
+        escapeCSV(item.sku),
+        escapeCSV(item.shortId),
+        escapeCSV(item.name),
+        escapeCSV(item.description),
+        escapeCSV(item.category),
+        escapeCSV(item.unitPrice),
+        escapeCSV(getLocationName(item.storeId)),
+        escapeCSV(getLocationName(item.warehouseId)),
+        escapeCSV(item.hasRfid ? 'Yes' : 'No'),
+        escapeCSV(item.isActive ? 'Yes' : 'No')
       ])
     ].map(row => row.join(',')).join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `all-items-export-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
     
     toast.success(`Exported all ${items.length} item(s)`);
