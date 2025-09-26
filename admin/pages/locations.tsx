@@ -187,10 +187,25 @@ const LocationsPage: React.FC = () => {
   // Multi-select functions
   const handleSelectAll = () => {
     const locations = locationsData?.data || [];
-    if (selectedItems.length === locations.length) {
-      setSelectedItems([]);
+    const currentPageIds = locations.map((location: Location) => location.id);
+    
+    // Check if all current page items are selected
+    const allCurrentPageSelected = currentPageIds.every(id => selectedItems.includes(id));
+    
+    if (allCurrentPageSelected) {
+      // Deselect all current page items
+      setSelectedItems(prev => prev.filter(id => !currentPageIds.includes(id)));
     } else {
-      setSelectedItems(locations.map((location: Location) => location.id));
+      // Select all current page items
+      setSelectedItems(prev => {
+        const newSelection = [...prev];
+        currentPageIds.forEach(id => {
+          if (!newSelection.includes(id)) {
+            newSelection.push(id);
+          }
+        });
+        return newSelection;
+      });
     }
   };
 
@@ -211,103 +226,139 @@ const LocationsPage: React.FC = () => {
     }
   };
 
-  const handleBulkExport = () => {
-    const locations = locationsData?.data || [];
-    const selectedLocations = locations.filter((location: Location) => 
-      selectedItems.includes(location.id)
-    );
-    
-    if (selectedLocations.length === 0) {
+  const handleBulkExport = async () => {
+    if (selectedItems.length === 0) {
       toast.error('No locations selected for export');
       return;
     }
     
-    const escapeCSV = (value: any) => {
-      if (value === null || value === undefined) return '';
-      const stringValue = String(value);
-      if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
-        return `"${stringValue.replace(/"/g, '""')}"`;
+    try {
+      // Fetch all locations to get complete data for selected items
+      const response = await fetch('http://localhost:3005/api/locations?limit=1000', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) throw new Error('Failed to fetch locations');
+      const allLocationsData = await response.json();
+      const allLocations = allLocationsData?.data || [];
+      
+      const selectedLocations = allLocations.filter((location: Location) => 
+        selectedItems.includes(location.id)
+      );
+      
+      if (selectedLocations.length === 0) {
+        toast.error('No valid locations found for export');
+        return;
       }
-      return stringValue;
-    };
-    
-    const csvContent = [
-      ['Name', 'Type', 'Address', 'City', 'State', 'Zip Code', 'Country', 'Phone', 'Email', 'Manager', 'Active'],
-      ...selectedLocations.map((location: Location) => [
-        escapeCSV(location.name),
-        escapeCSV(location.type),
-        escapeCSV(location.address),
-        escapeCSV(location.city),
-        escapeCSV(location.state),
-        escapeCSV(location.zipCode),
-        escapeCSV(location.country),
-        escapeCSV(location.phone),
-        escapeCSV(location.email),
-        escapeCSV(location.manager),
-        escapeCSV(location.isActive ? 'Yes' : 'No')
-      ])
-    ].map(row => row.join(',')).join('\n');
+      
+      const escapeCSV = (value: any) => {
+        if (value === null || value === undefined) return '';
+        const stringValue = String(value);
+        if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+          return `"${stringValue.replace(/"/g, '""')}"`;
+        }
+        return stringValue;
+      };
+      
+      const csvContent = [
+        ['Name', 'Type', 'Address', 'City', 'State', 'Zip Code', 'Country', 'Phone', 'Email', 'Manager', 'Active'],
+        ...selectedLocations.map((location: Location) => [
+          escapeCSV(location.name),
+          escapeCSV(location.type),
+          escapeCSV(location.address),
+          escapeCSV(location.city),
+          escapeCSV(location.state),
+          escapeCSV(location.zipCode),
+          escapeCSV(location.country),
+          escapeCSV(location.phone),
+          escapeCSV(location.email),
+          escapeCSV(location.manager),
+          escapeCSV(location.isActive ? 'Yes' : 'No')
+        ])
+      ].map(row => row.join(',')).join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `locations-export-${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-    
-    toast.success(`Exported ${selectedItems.length} location(s)`);
-    setSelectedItems([]);
-    setIsSelectMode(false);
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `locations-export-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success(`Exported ${selectedLocations.length} location(s)`);
+      setSelectedItems([]);
+      setIsSelectMode(false);
+    } catch (error) {
+      toast.error('Failed to export locations');
+      console.error('Export error:', error);
+    }
   };
 
-  const handleFullExport = () => {
-    const locations = locationsData?.data || [];
-    
-    if (locations.length === 0) {
-      toast.error('No locations to export');
-      return;
-    }
-    
-    const escapeCSV = (value: any) => {
-      if (value === null || value === undefined) return '';
-      const stringValue = String(value);
-      if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
-        return `"${stringValue.replace(/"/g, '""')}"`;
+  const handleFullExport = async () => {
+    try {
+      // Fetch all locations for export
+      const response = await fetch('http://localhost:3005/api/locations?limit=1000', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) throw new Error('Failed to fetch locations');
+      const allLocationsData = await response.json();
+      const locations = allLocationsData?.data || [];
+      
+      if (locations.length === 0) {
+        toast.error('No locations to export');
+        return;
       }
-      return stringValue;
-    };
-    
-    const csvContent = [
-      ['Name', 'Type', 'Address', 'City', 'State', 'Zip Code', 'Country', 'Phone', 'Email', 'Manager', 'Active'],
-      ...locations.map((location: Location) => [
-        escapeCSV(location.name),
-        escapeCSV(location.type),
-        escapeCSV(location.address),
-        escapeCSV(location.city),
-        escapeCSV(location.state),
-        escapeCSV(location.zipCode),
-        escapeCSV(location.country),
-        escapeCSV(location.phone),
-        escapeCSV(location.email),
-        escapeCSV(location.manager),
-        escapeCSV(location.isActive ? 'Yes' : 'No')
-      ])
-    ].map(row => row.join(',')).join('\n');
+      
+      const escapeCSV = (value: any) => {
+        if (value === null || value === undefined) return '';
+        const stringValue = String(value);
+        if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+          return `"${stringValue.replace(/"/g, '""')}"`;
+        }
+        return stringValue;
+      };
+      
+      const csvContent = [
+        ['Name', 'Type', 'Address', 'City', 'State', 'Zip Code', 'Country', 'Phone', 'Email', 'Manager', 'Active'],
+        ...locations.map((location: Location) => [
+          escapeCSV(location.name),
+          escapeCSV(location.type),
+          escapeCSV(location.address),
+          escapeCSV(location.city),
+          escapeCSV(location.state),
+          escapeCSV(location.zipCode),
+          escapeCSV(location.country),
+          escapeCSV(location.phone),
+          escapeCSV(location.email),
+          escapeCSV(location.manager),
+          escapeCSV(location.isActive ? 'Yes' : 'No')
+        ])
+      ].map(row => row.join(',')).join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `all-locations-export-${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-    
-    toast.success(`Exported all ${locations.length} location(s)`);
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `all-locations-export-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success(`Exported all ${locations.length} location(s)`);
+    } catch (error) {
+      toast.error('Failed to export locations');
+      console.error('Export error:', error);
+    }
   };
 
   const handleImport = (file: File) => {

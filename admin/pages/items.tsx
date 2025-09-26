@@ -253,10 +253,25 @@ const ItemsPage: React.FC = () => {
   // Multi-select functions
   const handleSelectAll = () => {
     const items = filteredItems || [];
-    if (selectedItems.length === items.length) {
-      setSelectedItems([]);
+    const currentPageIds = items.map((item: Item) => item.id);
+    
+    // Check if all current page items are selected
+    const allCurrentPageSelected = currentPageIds.every(id => selectedItems.includes(id));
+    
+    if (allCurrentPageSelected) {
+      // Deselect all current page items
+      setSelectedItems(prev => prev.filter(id => !currentPageIds.includes(id)));
     } else {
-      setSelectedItems(items.map((item: Item) => item.id));
+      // Select all current page items
+      setSelectedItems(prev => {
+        const newSelection = [...prev];
+        currentPageIds.forEach(id => {
+          if (!newSelection.includes(id)) {
+            newSelection.push(id);
+          }
+        });
+        return newSelection;
+      });
     }
   };
 
@@ -277,101 +292,137 @@ const ItemsPage: React.FC = () => {
     }
   };
 
-  const handleBulkExport = () => {
-    const items = filteredItems || [];
-    const selectedItemsData = items.filter((item: Item) => 
-      selectedItems.includes(item.id)
-    );
-    
-    if (selectedItemsData.length === 0) {
+  const handleBulkExport = async () => {
+    if (selectedItems.length === 0) {
       toast.error('No items selected for export');
       return;
     }
     
-    const escapeCSV = (value: any) => {
-      if (value === null || value === undefined) return '';
-      const stringValue = String(value);
-      if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
-        return `"${stringValue.replace(/"/g, '""')}"`;
+    try {
+      // Fetch all items to get complete data for selected items
+      const response = await fetch('http://localhost:3005/api/items?limit=1000', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) throw new Error('Failed to fetch items');
+      const allItemsData = await response.json();
+      const allItems = allItemsData?.data || [];
+      
+      const selectedItemsData = allItems.filter((item: Item) => 
+        selectedItems.includes(item.id)
+      );
+      
+      if (selectedItemsData.length === 0) {
+        toast.error('No valid items found for export');
+        return;
       }
-      return stringValue;
-    };
-    
-    const csvContent = [
-      ['SKU', 'Short ID', 'Name', 'Description', 'Category', 'Unit Price', 'Store', 'Warehouse', 'Has RFID', 'Active'],
-      ...selectedItemsData.map((item: Item) => [
-        escapeCSV(item.sku),
-        escapeCSV(item.shortId),
-        escapeCSV(item.name),
-        escapeCSV(item.description),
-        escapeCSV(item.category),
-        escapeCSV(item.unitPrice),
-        escapeCSV(getLocationName(item.storeId)),
-        escapeCSV(getLocationName(item.warehouseId)),
-        escapeCSV(item.hasRfid ? 'Yes' : 'No'),
-        escapeCSV(item.isActive ? 'Yes' : 'No')
-      ])
-    ].map(row => row.join(',')).join('\n');
+      
+      const escapeCSV = (value: any) => {
+        if (value === null || value === undefined) return '';
+        const stringValue = String(value);
+        if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+          return `"${stringValue.replace(/"/g, '""')}"`;
+        }
+        return stringValue;
+      };
+      
+      const csvContent = [
+        ['SKU', 'Short ID', 'Name', 'Description', 'Category', 'Unit Price', 'Store', 'Warehouse', 'Has RFID', 'Active'],
+        ...selectedItemsData.map((item: Item) => [
+          escapeCSV(item.sku),
+          escapeCSV(item.shortId),
+          escapeCSV(item.name),
+          escapeCSV(item.description),
+          escapeCSV(item.category),
+          escapeCSV(item.unitPrice),
+          escapeCSV(getLocationName(item.storeId)),
+          escapeCSV(getLocationName(item.warehouseId)),
+          escapeCSV(item.hasRfid ? 'Yes' : 'No'),
+          escapeCSV(item.isActive ? 'Yes' : 'No')
+        ])
+      ].map(row => row.join(',')).join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `items-export-${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-    
-    toast.success(`Exported ${selectedItems.length} item(s)`);
-    setSelectedItems([]);
-    setIsSelectMode(false);
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `items-export-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success(`Exported ${selectedItemsData.length} item(s)`);
+      setSelectedItems([]);
+      setIsSelectMode(false);
+    } catch (error) {
+      toast.error('Failed to export items');
+      console.error('Export error:', error);
+    }
   };
 
-  const handleFullExport = () => {
-    const items = filteredItems || [];
-    
-    if (items.length === 0) {
-      toast.error('No items to export');
-      return;
-    }
-    
-    const escapeCSV = (value: any) => {
-      if (value === null || value === undefined) return '';
-      const stringValue = String(value);
-      if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
-        return `"${stringValue.replace(/"/g, '""')}"`;
+  const handleFullExport = async () => {
+    try {
+      // Fetch all items for export
+      const response = await fetch('http://localhost:3005/api/items?limit=1000', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) throw new Error('Failed to fetch items');
+      const allItemsData = await response.json();
+      const items = allItemsData?.data || [];
+      
+      if (items.length === 0) {
+        toast.error('No items to export');
+        return;
       }
-      return stringValue;
-    };
-    
-    const csvContent = [
-      ['SKU', 'Short ID', 'Name', 'Description', 'Category', 'Unit Price', 'Store', 'Warehouse', 'Has RFID', 'Active'],
-      ...items.map((item: Item) => [
-        escapeCSV(item.sku),
-        escapeCSV(item.shortId),
-        escapeCSV(item.name),
-        escapeCSV(item.description),
-        escapeCSV(item.category),
-        escapeCSV(item.unitPrice),
-        escapeCSV(getLocationName(item.storeId)),
-        escapeCSV(getLocationName(item.warehouseId)),
-        escapeCSV(item.hasRfid ? 'Yes' : 'No'),
-        escapeCSV(item.isActive ? 'Yes' : 'No')
-      ])
-    ].map(row => row.join(',')).join('\n');
+      
+      const escapeCSV = (value: any) => {
+        if (value === null || value === undefined) return '';
+        const stringValue = String(value);
+        if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+          return `"${stringValue.replace(/"/g, '""')}"`;
+        }
+        return stringValue;
+      };
+      
+      const csvContent = [
+        ['SKU', 'Short ID', 'Name', 'Description', 'Category', 'Unit Price', 'Store', 'Warehouse', 'Has RFID', 'Active'],
+        ...items.map((item: Item) => [
+          escapeCSV(item.sku),
+          escapeCSV(item.shortId),
+          escapeCSV(item.name),
+          escapeCSV(item.description),
+          escapeCSV(item.category),
+          escapeCSV(item.unitPrice),
+          escapeCSV(getLocationName(item.storeId)),
+          escapeCSV(getLocationName(item.warehouseId)),
+          escapeCSV(item.hasRfid ? 'Yes' : 'No'),
+          escapeCSV(item.isActive ? 'Yes' : 'No')
+        ])
+      ].map(row => row.join(',')).join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `all-items-export-${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-    
-    toast.success(`Exported all ${items.length} item(s)`);
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `all-items-export-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success(`Exported all ${items.length} item(s)`);
+    } catch (error) {
+      toast.error('Failed to export items');
+      console.error('Export error:', error);
+    }
   };
 
   const handleImport = (file: File) => {
