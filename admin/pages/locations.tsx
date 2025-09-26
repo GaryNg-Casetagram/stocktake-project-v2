@@ -14,7 +14,12 @@ import {
   PencilIcon,
   TrashIcon,
   CheckCircleIcon,
-  XCircleIcon
+  XCircleIcon,
+  ArrowDownTrayIcon,
+  ArrowUpTrayIcon,
+  DocumentArrowDownIcon,
+  DocumentArrowUpIcon,
+  Squares2X2Icon
 } from '@heroicons/react/24/outline';
 
 interface Location {
@@ -44,6 +49,10 @@ const LocationsPage: React.FC = () => {
   const [editingLocation, setEditingLocation] = useState<Location | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(9);
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [isSelectMode, setIsSelectMode] = useState(false);
   const queryClient = useQueryClient();
 
   // Check authentication and session validity on component mount
@@ -149,6 +158,135 @@ const LocationsPage: React.FC = () => {
     }
   };
 
+  // Multi-select functions
+  const handleSelectAll = () => {
+    const locations = locationsData?.data || [];
+    if (selectedItems.length === locations.length) {
+      setSelectedItems([]);
+    } else {
+      setSelectedItems(locations.map((location: Location) => location.id));
+    }
+  };
+
+  const handleSelectItem = (id: string) => {
+    setSelectedItems(prev => 
+      prev.includes(id) 
+        ? prev.filter(item => item !== id)
+        : [...prev, id]
+    );
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedItems.length === 0) return;
+    if (window.confirm(`Are you sure you want to delete ${selectedItems.length} location(s)?`)) {
+      selectedItems.forEach(id => deleteLocationMutation.mutate(id));
+      setSelectedItems([]);
+      setIsSelectMode(false);
+    }
+  };
+
+  const handleBulkExport = () => {
+    const locations = locationsData?.data || [];
+    const selectedLocations = locations.filter((location: Location) => 
+      selectedItems.includes(location.id)
+    );
+    
+    const csvContent = [
+      ['Name', 'Type', 'Address', 'City', 'State', 'Zip Code', 'Country', 'Phone', 'Email', 'Manager', 'Active'],
+      ...selectedLocations.map((location: Location) => [
+        location.name,
+        location.type,
+        location.address,
+        location.city,
+        location.state,
+        location.zipCode,
+        location.country,
+        location.phone,
+        location.email,
+        location.manager,
+        location.isActive ? 'Yes' : 'No'
+      ])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `locations-export-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    
+    toast.success(`Exported ${selectedItems.length} location(s)`);
+    setSelectedItems([]);
+    setIsSelectMode(false);
+  };
+
+  const handleFullExport = () => {
+    const locations = locationsData?.data || [];
+    
+    const csvContent = [
+      ['Name', 'Type', 'Address', 'City', 'State', 'Zip Code', 'Country', 'Phone', 'Email', 'Manager', 'Active'],
+      ...locations.map((location: Location) => [
+        location.name,
+        location.type,
+        location.address,
+        location.city,
+        location.state,
+        location.zipCode,
+        location.country,
+        location.phone,
+        location.email,
+        location.manager,
+        location.isActive ? 'Yes' : 'No'
+      ])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `all-locations-export-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    
+    toast.success(`Exported all ${locations.length} location(s)`);
+  };
+
+  const handleImport = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const csv = e.target?.result as string;
+      const lines = csv.split('\n');
+      const headers = lines[0].split(',');
+      
+      const locations = lines.slice(1).map(line => {
+        const values = line.split(',');
+        return {
+          name: values[0]?.trim(),
+          type: values[1]?.trim() as 'store' | 'warehouse',
+          address: values[2]?.trim(),
+          city: values[3]?.trim(),
+          state: values[4]?.trim(),
+          zipCode: values[5]?.trim(),
+          country: values[6]?.trim(),
+          phone: values[7]?.trim(),
+          email: values[8]?.trim(),
+          manager: values[9]?.trim(),
+          isActive: values[10]?.trim().toLowerCase() === 'yes'
+        };
+      }).filter(loc => loc.name);
+
+      // Import locations one by one
+      locations.forEach(location => {
+        createLocationMutation.mutate(location);
+      });
+      
+      toast.success(`Importing ${locations.length} location(s)...`);
+      setShowImportModal(false);
+    };
+    reader.readAsText(file);
+  };
+
   const locations = locationsData?.data || [];
   const totalLocations = locationsData?.total || 0;
   const totalPages = Math.ceil(totalLocations / itemsPerPage);
@@ -156,18 +294,63 @@ const LocationsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Locations</h1>
-          <p className="text-gray-600">Manage your stores and warehouses ({totalLocations} total)</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Locations</h1>
+          <p className="text-sm sm:text-base text-gray-600">Manage your stores and warehouses ({totalLocations} total)</p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center space-x-2"
-        >
-          <PlusIcon className="w-5 h-5" />
-          <span>Add Location</span>
-        </button>
+        <div className="flex flex-wrap gap-2">
+          {isSelectMode && selectedItems.length > 0 && (
+            <>
+              <button
+                onClick={handleBulkDelete}
+                className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md flex items-center space-x-2 text-sm"
+              >
+                <TrashIcon className="w-4 h-4" />
+                <span>Delete ({selectedItems.length})</span>
+              </button>
+              <button
+                onClick={handleBulkExport}
+                className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md flex items-center space-x-2 text-sm"
+              >
+                <DocumentArrowDownIcon className="w-4 h-4" />
+                <span>Export ({selectedItems.length})</span>
+              </button>
+            </>
+          )}
+          <button
+            onClick={() => setIsSelectMode(!isSelectMode)}
+            className={`px-3 py-2 rounded-md flex items-center space-x-2 text-sm ${
+              isSelectMode 
+                ? 'bg-gray-600 hover:bg-gray-700 text-white' 
+                : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+            }`}
+          >
+            <Squares2X2Icon className="w-4 h-4" />
+            <span>{isSelectMode ? 'Cancel' : 'Select'}</span>
+          </button>
+          <button
+            onClick={() => setShowImportModal(true)}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-md flex items-center space-x-2 text-sm"
+          >
+            <ArrowUpTrayIcon className="w-4 h-4" />
+            <span>Import</span>
+          </button>
+          <button
+            onClick={handleFullExport}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-md flex items-center space-x-2 text-sm"
+          >
+            <ArrowDownTrayIcon className="w-4 h-4" />
+            <span>Export All</span>
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md flex items-center space-x-2 text-sm"
+          >
+            <PlusIcon className="w-4 h-4" />
+            <span>Add Location</span>
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -239,10 +422,20 @@ const LocationsPage: React.FC = () => {
           ))
         ) : (
           locations.map((location: Location) => (
-            <div key={location.id} className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow">
+            <div key={location.id} className={`bg-white rounded-lg shadow hover:shadow-lg transition-shadow ${
+              isSelectMode ? 'ring-2 ring-blue-500' : ''
+            } ${selectedItems.includes(location.id) ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}>
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center">
+                    {isSelectMode && (
+                      <input
+                        type="checkbox"
+                        checked={selectedItems.includes(location.id)}
+                        onChange={() => handleSelectItem(location.id)}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-3"
+                      />
+                    )}
                     <div className="text-2xl mr-3">{location.type === 'store' ? '🏪' : '🏭'}</div>
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900">{location.name}</h3>
@@ -253,22 +446,24 @@ const LocationsPage: React.FC = () => {
                       </span>
                     </div>
                   </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => setEditingLocation(location)}
-                      className="text-blue-600 hover:text-blue-900"
-                      title="Edit location"
-                    >
-                      <PencilIcon className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(location.id)}
-                      className="text-red-600 hover:text-red-900"
-                      title="Delete location"
-                    >
-                      <TrashIcon className="h-4 w-4" />
-                    </button>
-                  </div>
+                  {!isSelectMode && (
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => setEditingLocation(location)}
+                        className="text-blue-600 hover:text-blue-900"
+                        title="Edit location"
+                      >
+                        <PencilIcon className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(location.id)}
+                        className="text-red-600 hover:text-red-900"
+                        title="Delete location"
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-3">
@@ -400,7 +595,7 @@ const LocationsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Create/Edit Modal */}
+      {/* Modals */}
       {(showCreateModal || editingLocation) && (
         <LocationModal
           location={editingLocation}
@@ -408,6 +603,20 @@ const LocationsPage: React.FC = () => {
             setShowCreateModal(false);
             setEditingLocation(null);
           }}
+        />
+      )}
+
+      {showImportModal && (
+        <ImportModal
+          onClose={() => setShowImportModal(false)}
+          onImport={handleImport}
+        />
+      )}
+
+      {showExportModal && (
+        <ExportModal
+          onClose={() => setShowExportModal(false)}
+          onExport={handleFullExport}
         />
       )}
     </div>
@@ -629,6 +838,130 @@ const LocationModal: React.FC<{
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  );
+};
+
+// Import Modal Component
+const ImportModal: React.FC<{ onClose: () => void; onImport: (file: File) => void }> = ({ onClose, onImport }) => {
+  const [file, setFile] = useState<File | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+    }
+  };
+
+  const handleSubmit = () => {
+    if (file) {
+      onImport(file);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="mt-3">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-gray-900">Import Locations</h3>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <XCircleIcon className="w-6 h-6" />
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">CSV File</label>
+              <input
+                type="file"
+                accept=".csv"
+                onChange={handleFileChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            
+            <div className="bg-gray-50 p-3 rounded-md">
+              <h4 className="text-sm font-medium text-gray-900 mb-2">CSV Format:</h4>
+              <p className="text-xs text-gray-600">
+                Name, Type, Address, City, State, Zip Code, Country, Phone, Email, Manager, Active
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                Type should be "store" or "warehouse", Active should be "Yes" or "No"
+              </p>
+            </div>
+            
+            <div className="flex justify-end space-x-3 pt-4">
+              <button
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={!file}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+              >
+                Import
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Export Modal Component
+const ExportModal: React.FC<{ onClose: () => void; onExport: () => void }> = ({ onClose, onExport }) => {
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="mt-3">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-gray-900">Export Locations</h3>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <XCircleIcon className="w-6 h-6" />
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="bg-gray-50 p-3 rounded-md">
+              <h4 className="text-sm font-medium text-gray-900 mb-2">Export Options:</h4>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• CSV format with all location data</li>
+                <li>• Includes: Name, Type, Address, Contact info</li>
+                <li>• Ready for Excel or Google Sheets</li>
+              </ul>
+            </div>
+            
+            <div className="flex justify-end space-x-3 pt-4">
+              <button
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  onExport();
+                  onClose();
+                }}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+              >
+                Export All
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
