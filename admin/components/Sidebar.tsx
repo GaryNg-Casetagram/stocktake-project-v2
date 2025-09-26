@@ -51,13 +51,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
       {/* Sidebar */}
       <div className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
+        fixed inset-y-0 left-0 z-50 w-80 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0 lg:static lg:inset-0 lg:z-auto
       `}>
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
+          <div className="flex items-center justify-between h-16 px-8 border-b border-gray-200">
             <h1 className="text-xl font-bold text-gray-900">StockTake</h1>
             <button
               onClick={onClose}
@@ -70,14 +70,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </div>
 
           {/* User Info */}
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-8 py-4 border-b border-gray-200">
             <div className="flex items-center">
-              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
                 <span className="text-white font-medium text-sm">
                   {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
                 </span>
               </div>
-              <div className="ml-3">
+              <div className="ml-4">
                 <p className="text-sm font-medium text-gray-900">
                   {user?.firstName} {user?.lastName}
                 </p>
@@ -87,7 +87,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-2">
+          <nav className="flex-1 px-6 py-6 space-y-2">
             {navigation.map((item) => {
               // Only show superadmin-only items to superadmin users
               if (item.superadminOnly && user?.role !== 'superadmin') {
@@ -100,7 +100,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                   key={item.name}
                   href={item.href}
                   className={`
-                    flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors
+                    flex items-center px-4 py-3 text-sm font-medium rounded-md transition-colors
                     ${isActive 
                       ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-700' 
                       : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
@@ -108,7 +108,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                   `}
                   onClick={onClose}
                 >
-                  <item.icon className="w-5 h-5 mr-3" />
+                  <item.icon className="w-5 h-5 mr-4" />
                   {item.name}
                 </Link>
               );
@@ -116,12 +116,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </nav>
 
           {/* Logout */}
-          <div className="px-4 py-4 border-t border-gray-200">
+          <div className="px-6 py-4 border-t border-gray-200">
             <button
               onClick={handleLogout}
-              className="flex items-center w-full px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-100 hover:text-gray-900 transition-colors"
+              className="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-100 hover:text-gray-900 transition-colors"
             >
-              <ArrowRightOnRectangleIcon className="w-5 h-5 mr-3" />
+              <ArrowRightOnRectangleIcon className="w-5 h-5 mr-4" />
               Logout
             </button>
           </div>
