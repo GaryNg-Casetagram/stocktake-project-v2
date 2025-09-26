@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useRouter } from 'next/router';
 import { useAuthStore } from '../stores/authStore';
-import toast from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 import { 
   PlusIcon, 
   MagnifyingGlassIcon,
